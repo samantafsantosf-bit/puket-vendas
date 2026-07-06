@@ -313,9 +313,9 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   <div class="page" id="page-vendas">
     <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-primary" onclick="openModal('modal-venda')">+ Registrar Venda</button>
-      <button class="btn-outline" onclick="showConfirm('Zerar TODAS as vendas?',()=>{S.vendas=[];toast('Vendas zeradas! ✅');renderAll();},'⚠️','Zerar tudo')">🗑️ Zerar todas</button>
+      <div id="btn-zerar-vendas"></div>
     </div>
-    <div class="card"><div class="card-header"><div class="card-title">Histórico</div></div><div id="venda-list"></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Histórico por Dia</div></div><div id="venda-list"></div></div>
   </div>
 
   <!-- LISTA DA VEZ -->
@@ -445,7 +445,11 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   <div class="modal">
     <div class="modal-title">Registrar Venda 💳</div>
     <label class="form-label">Vendedora</label><select class="form-input" id="venda-vendedora"></select>
-    <div class="form-row">
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px;background:var(--gray-light);border-radius:var(--radius-sm)">
+      <input type="checkbox" id="venda-troca" style="width:18px;height:18px;accent-color:var(--pink)" onchange="const v=document.getElementById('venda-valor');v.disabled=this.checked;if(this.checked)v.value=''">
+      <label for="venda-troca" style="font-size:13px;font-weight:800;cursor:pointer">🔄 Troca zerada (valor R$ 0)</label>
+    </div>
+    <div class="form-row" style="margin-top:8px">
       <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" id="venda-valor" type="number" placeholder="0,00" min="0" step="0.01"></div>
       <div class="form-group"><label class="form-label">Peças</label><input class="form-input" id="venda-pecas" type="number" placeholder="1" min="1"></div>
     </div>
@@ -657,8 +661,8 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 // ===========================================
 // SUPABASE — cliente fetch puro (funciona em todos os browsers)
 // ===========================================
-const SUPABASE_URL = 'https://kemfxmesqpczhbvktdun.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlbWZ4bWVzcXBjemhidmt0ZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTcwNDgsImV4cCI6MjA5MzA3MzA0OH0.xwkKpLCqcJc0ikAT9a39L8k6K4EVkhu0P_9eQf1Inq4';
+const SUPABASE_URL = 'https://iiftvjnlwioqjoexnyhz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpZnR2am5sd2lvcWpvZXhueWh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzMzQ2NzAsImV4cCI6MjA5ODkxMDY3MH0.OuA4c6o-yRQt1vApEeiQbfQmT9A8Z1DfNhIARxFBZw0';
 
 // Usa proxy do Vercel em produção, direto em localhost
 const API_BASE = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
@@ -1023,8 +1027,10 @@ function setupRole(){
   const b1=nav.slice(0,2),b2=nav.slice(2,4);
   document.getElementById('bnav-inner').innerHTML=b1.map(n=>`<button class="bnav-item" onclick="navTo('${n.k}')"><span class="icon">${n.i}</span>${n.l}</button>`).join('')+`<button class="bnav-center" onclick="openModal('modal-atd')">＋</button>`+b2.map(n=>`<button class="bnav-item" onclick="navTo('${n.k}')"><span class="icon">${n.i}</span>${n.l}</button>`).join('');
   document.getElementById('btn-cad-v').style.display=can('admin','gerente')?'block':'none';
-  document.getElementById('btn-fb').style.display=can('admin','gerente')?'block':'none';
+  document.getElementById('btn-fb').style.display=can('admin','gerente','vendedora')?'block':'none';
   document.getElementById('btn-est').style.display=can('admin','gerente')?'block':'none';
+  const zerarEl=document.getElementById('btn-zerar-vendas');
+  if(zerarEl) zerarEl.innerHTML=can('admin')?`<button class="btn-outline" onclick="showConfirm('Zerar TODAS as vendas?',async()=>{for(const v of S.vendas){try{await dbDelete('vendas',v.id);}catch(e){}}await loadAll();toast('Vendas zeradas!');renderAll();},'⚠️','Zerar')">🗑️ Zerar todas</button>`:'';
   document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'long'});
   showPage(nav[0].k);
   document.querySelector(`.nav-item[data-page="${nav[0].k}"]`)?.classList.add('active');
@@ -1192,15 +1198,32 @@ async function salvarMetaVendedora(){
 // === VENDAS ===
 async function salvarVenda(){
   const vId=document.getElementById('venda-vendedora').value;
-  const valor=parseFloat(document.getElementById('venda-valor').value);
+  const valorStr=document.getElementById('venda-valor').value;
   const pecas=parseInt(document.getElementById('venda-pecas').value)||1;
   const data=document.getElementById('venda-data').value;
-  if(!vId||!valor){toast('Preencha todos os campos!');return;}
+  const eTroca=document.getElementById('venda-troca')?.checked||false;
+  if(!vId){toast('Selecione a vendedora!');return;}
+  if(!data){toast('Informe a data!');return;}
+  // Troca pode ter valor 0, venda normal precisa de valor
+  const valor=eTroca?0:(parseFloat(valorStr)||0);
+  if(!eTroca&&valor<=0){toast('Informe o valor da venda!');return;}
+  const vd=getV(vId);
   try{
-    await dbInsert('vendas',{vendedora_id:vId,valor,pecas,data});
-    await loadAll();closeModal('modal-venda');
-    document.getElementById('venda-valor').value='';document.getElementById('venda-pecas').value='';
-    toast('Venda registrada! 💳');renderAll();
+    await dbInsert('vendas',{
+      vendedora_id:vId,
+      loja_id:vd?.lojaId||null,
+      valor,
+      pecas,
+      data,
+      is_troca:eTroca
+    });
+    await loadAll();
+    closeModal('modal-venda');
+    document.getElementById('venda-valor').value='';
+    document.getElementById('venda-pecas').value='';
+    if(document.getElementById('venda-troca')) document.getElementById('venda-troca').checked=false;
+    toast(eTroca?'Troca registrada! 🔄':'Venda registrada! 💳');
+    renderAll();
   }catch(e){toast('Erro: '+e.message);}
 }
 function openEditVenda(id){
@@ -1375,13 +1398,29 @@ async function salvarFeedback(){
   const vId=document.getElementById('fb-vendedora').value;
   const tipo=document.getElementById('fb-tipo').value;
   const texto=document.getElementById('fb-texto').value.trim();
+  if(!vId){toast('Selecione a vendedora!');return;}
   if(!texto){toast('Escreva o feedback!');return;}
-  const dataStr=new Date().toLocaleDateString('pt-BR').slice(0,5);
+  const vd=getV(vId);
+  const lojaId=vd?.lojaId||S.currentUser?.lojaId||null;
   try{
-    await dbInsert('feedbacks',{vendedora_id:vId,tipo,texto,data:dataStr});
-    await loadAll();closeModal('modal-feedback');document.getElementById('fb-texto').value='';S.fbPendingAttachments=[];
-    toast('Feedback salvo! 💬');renderAll();
-  }catch(e){toast('Erro: '+e.message);}
+    await dbInsert('feedbacks',{
+      vendedora_id:vId,
+      loja_id:lojaId,
+      tipo,
+      texto,
+      data_registro:new Date().toISOString().split('T')[0]
+    });
+    await loadAll();
+    closeModal('modal-feedback');
+    document.getElementById('fb-texto').value='';
+    S.fbPendingAttachments=[];
+    document.getElementById('fb-attach-preview').innerHTML='';
+    toast('Feedback salvo! 💬');
+    renderAll();
+  }catch(e){
+    console.error('Feedback erro:',e);
+    toast('Erro ao salvar: '+e.message);
+  }
 }
 function openEditFeedback(id){
   const f=S.feedbacks.find(x=>x.id===id);if(!f)return;
@@ -1619,21 +1658,58 @@ function renderLista(){
 }
 
 function renderVendas(){
+  const u=S.currentUser;
   const ids=myVendedoras().map(v=>v.id);
-  const lista=[...S.vendas].filter(v=>ids.includes(v.vendedoraId)).reverse();
-  if(lista.length===0){document.getElementById('venda-list').innerHTML=`<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;font-weight:600">Nenhuma venda registrada ainda.</div>`;return;}
-  document.getElementById('venda-list').innerHTML=lista.map(v=>{
-    const vd=getV(v.vendedoraId);const loja=getLoja(vd?.lojaId);const canEdit=can('admin','gerente');
-    return`<div style="display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid var(--gray-light)">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${vd?.emoji||'👩'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:800">${vd?nomeReal(vd):'—'}</div>
-        <div style="font-size:10px;color:var(--gray);font-weight:600">${v.data} · ${v.pecas} peça(s) · ${loja?loja.nome:'—'}</div>
+  const lista=[...S.vendas].filter(v=>ids.includes(v.vendedoraId));
+  // Ordena por data desc
+  lista.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const canEdit=can('admin','gerente')||u.role==='vendedora';
+
+  if(lista.length===0){
+    document.getElementById('venda-list').innerHTML=`<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;font-weight:600">Nenhuma venda registrada ainda.</div>`;
+    return;
+  }
+
+  // Agrupa por data
+  const porDia={};
+  lista.forEach(v=>{
+    const dia=v.data||'Sem data';
+    if(!porDia[dia]) porDia[dia]=[];
+    porDia[dia].push(v);
+  });
+
+  document.getElementById('venda-list').innerHTML=Object.entries(porDia).map(([dia,vendas])=>{
+    const totalDia=vendas.reduce((s,v)=>s+v.valor,0);
+    // Formata data
+    let diaFmt=dia;
+    try{
+      const [y,m,d]=dia.split('-');
+      if(y&&m&&d) diaFmt=`${d}/${m}/${y}`;
+    }catch(e){}
+
+    return`<div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--pink-pale);border-radius:var(--radius-sm);margin-bottom:6px">
+        <div style="font-size:12px;font-weight:800;color:var(--pink)">📅 ${diaFmt}</div>
+        <div style="font-size:12px;font-weight:900;color:var(--pink)">${fmt(totalDia)}</div>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:13px;font-weight:900;color:var(--teal)">${fmt(v.valor)}</div>
-        ${canEdit?`<div style="display:flex;gap:4px;margin-top:4px;justify-content:flex-end"><button class="btn-sm btn-edit" onclick="openEditVenda('${v.id}')">✏️</button><button class="btn-sm btn-del" onclick="excluirVenda('${v.id}')">🗑️</button></div>`:''}
-      </div>
+      ${vendas.map(v=>{
+        const vd=getV(v.vendedoraId);const loja=getLoja(vd?.lojaId);
+        const eTroca=v.valor===0;
+        return`<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--gray-light)">
+          <div style="width:34px;height:34px;border-radius:50%;background:${eTroca?'#FFF8E1':'var(--pink-pale)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${eTroca?'🔄':vd?.emoji||'👩'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800">${vd?nomeReal(vd):'—'} ${eTroca?'<span style="font-size:10px;color:#F57F17;font-weight:800">TROCA</span>':''}</div>
+            <div style="font-size:10px;color:var(--gray);font-weight:600">${v.pecas} peça(s) · ${loja?loja.nome:'—'}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:900;color:${eTroca?'#F57F17':'var(--teal)'}">${eTroca?'Troca':fmt(v.valor)}</div>
+            ${canEdit?`<div style="display:flex;gap:4px;margin-top:4px;justify-content:flex-end">
+              <button class="btn-sm btn-edit" onclick="openEditVenda('${v.id}')">✏️</button>
+              <button class="btn-sm btn-del" onclick="excluirVenda('${v.id}')">🗑️</button>
+            </div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
   }).join('');
 }
