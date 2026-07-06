@@ -286,27 +286,37 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   <div class="page active" id="page-dashboard">
     <!-- Abas de loja (admin vê todas) -->
     <div id="dash-loja-tabs" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"></div>
-    <!-- Stats gerais -->
-    <div class="stat-grid">
+
+    <!-- SEÇÃO DIÁRIA -->
+    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📅 Hoje — <span id="dash-data-hoje"></span></div>
+    <div class="stat-grid" style="margin-bottom:10px">
+      <div class="stat-card teal"><span class="stat-icon">💰</span><div class="stat-label">Fat. Hoje</div><div class="stat-value" id="fat-dia">R$ 0</div><div class="stat-sub" id="fat-dia-sub">da loja</div></div>
+      <div class="stat-card pink"><span class="stat-icon">🏷️</span><div class="stat-label">Ticket Médio</div><div class="stat-value" id="ticket-dia">R$ 0</div><div class="stat-sub">hoje</div></div>
+      <div class="stat-card yellow"><span class="stat-icon">🔄</span><div class="stat-label">Conversão</div><div class="stat-value" id="conv-dia">0%</div><div class="stat-sub">hoje</div></div>
+      <div class="stat-card purple"><span class="stat-icon">👗</span><div class="stat-label">Peças/Atd.</div><div class="stat-value" id="pecas-dia">0</div><div class="stat-sub">hoje</div></div>
+    </div>
+    <!-- Tabela diária por vendedora -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header"><div class="card-title">Desempenho do Dia por Vendedora</div></div>
+      <div id="dash-dia-vendedoras"></div>
+    </div>
+
+    <!-- SEÇÃO MENSAL -->
+    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px">📊 Mês Atual</div>
+    <div class="stat-grid" style="margin-bottom:10px">
       <div class="stat-card teal"><span class="stat-icon">💰</span><div class="stat-label">Faturamento</div><div class="stat-value" id="fat-hoje">R$ 0</div><div class="stat-sub" id="fat-sub">da loja</div></div>
       <div class="stat-card pink"><span class="stat-icon">🎯</span><div class="stat-label">1ª Meta</div><div class="stat-value" id="dash-meta1">—</div><div class="prog-track"><div class="prog-fill" id="dash-prog1" style="width:0%"></div></div><div class="prog-pct" id="dash-pct1">0%</div></div>
-      <div class="stat-card yellow"><span class="stat-icon">🏷️</span><div class="stat-label">Ticket Médio</div><div class="stat-value" id="ticket-medio">R$ 0</div><div class="stat-sub">hoje</div></div>
-      <div class="stat-card purple"><span class="stat-icon">🔄</span><div class="stat-label">Conversão</div><div class="stat-value" id="conv-geral">0%</div><div class="stat-sub">da loja</div></div>
+      <div class="stat-card yellow"><span class="stat-icon">🏷️</span><div class="stat-label">Ticket Médio</div><div class="stat-value" id="ticket-medio">R$ 0</div><div class="stat-sub">mês</div></div>
+      <div class="stat-card purple"><span class="stat-icon">🔄</span><div class="stat-label">Conversão</div><div class="stat-value" id="conv-geral">0%</div><div class="stat-sub" id="conv-sub">da loja</div></div>
     </div>
     <div class="section-grid wide">
       <div class="card">
-        <div class="card-header"><div class="card-title" id="dash-chart-title">Faturamento</div></div>
-        <div class="chart-wrap"><canvas id="chartFat"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Ranking</div><a class="card-link" onclick="navTo('vendedores')">Ver todas ›</a></div>
+        <div class="card-header"><div class="card-title">Ranking do Mês</div><a class="card-link" onclick="navTo('vendedores')">Ver todas ›</a></div>
         <div class="rank-list" id="rank-list"></div>
       </div>
-    </div>
-    <div class="section-grid">
-      <div class="card"><div class="card-header"><div class="card-title">Últimas Vendas</div><a class="card-link" onclick="navTo('vendas')">Ver todas ›</a></div><div id="ultimas-vendas"></div></div>
       <div class="card"><div class="card-header"><div class="card-title">Conversão por Vendedora</div></div><div id="conv-vendedoras"></div></div>
     </div>
+    <div class="card"><div class="card-header"><div class="card-title">Últimas Vendas</div><a class="card-link" onclick="navTo('vendas')">Ver todas ›</a></div><div id="ultimas-vendas"></div></div>
   </div>
 
   <!-- VENDAS -->
@@ -400,8 +410,23 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- RELATÓRIOS -->
   <div class="page" id="page-relatorios">
-    <div class="card" style="margin-bottom:14px"><div class="card-header"><div class="card-title">Conversão por Vendedora</div></div><div class="chart-wrap"><canvas id="chartConv"></canvas></div></div>
-    <div class="card"><div class="card-header"><div class="card-title">Faturamento por Vendedora</div></div><div class="chart-wrap"><canvas id="chartVend2"></canvas></div></div>
+    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📊 Relatórios do Mês</div>
+    <div class="section-grid">
+      <div class="card"><div class="card-header"><div class="card-title">Faturamento por Vendedora</div></div><div class="chart-wrap"><canvas id="chartVend2"></canvas></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Conversão por Vendedora</div></div><div class="chart-wrap"><canvas id="chartConv"></canvas></div></div>
+    </div>
+    <div class="section-grid">
+      <div class="card"><div class="card-header"><div class="card-title">Ticket Médio por Vendedora</div></div><div class="chart-wrap"><canvas id="chartTicket"></canvas></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Média de Peças por Atendimento</div></div><div class="chart-wrap"><canvas id="chartPecas"></canvas></div></div>
+    </div>
+    <!-- Tabela detalhada -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Resumo por Vendedora</div></div>
+      <div style="overflow-x:auto"><table class="tbl" id="tbl-relatorio">
+        <thead><tr><th>Vendedora</th><th>Faturamento</th><th>Vendas</th><th>Ticket Médio</th><th>Atds</th><th>Conversão</th><th>Peças/Atd</th></tr></thead>
+        <tbody id="relatorio-tbody"></tbody>
+      </table></div>
+    </div>
   </div>
 
 </div><!-- /main -->
@@ -1011,7 +1036,7 @@ function doLogout(){S.currentUser=null;document.getElementById('login-screen').s
 const NAVS={
   admin:[{k:'dashboard',i:'📊',l:'Dashboard'},{k:'vendas',i:'💳',l:'Vendas'},{k:'lista',i:'📋',l:'Lista da Vez'},{k:'metas',i:'🎯',l:'Metas'},{k:'vendedores',i:'👩',l:'Vendedoras'},{k:'feedback',i:'💬',l:'Feedback'},{k:'estrategias',i:'✨',l:'Estratégias'},{k:'vm',i:'📸',l:'Visual Merch.'},{k:'relatorios',i:'📈',l:'Relatórios'},{k:'lojas',i:'🏪',l:'Lojas'},{k:'usuarios',i:'🔑',l:'Usuários'},{k:'perfil',i:'👤',l:'Minha Conta'}],
   gerente:[{k:'dashboard',i:'📊',l:'Dashboard'},{k:'vendas',i:'💳',l:'Vendas'},{k:'lista',i:'📋',l:'Lista da Vez'},{k:'metas',i:'🎯',l:'Metas'},{k:'vendedores',i:'👩',l:'Minha Equipe'},{k:'feedback',i:'💬',l:'Feedback'},{k:'estrategias',i:'✨',l:'Estratégias'},{k:'vm',i:'📸',l:'Visual Merch.'},{k:'relatorios',i:'📈',l:'Relatórios'},{k:'perfil',i:'👤',l:'Minha Conta'}],
-  vendedora:[{k:'lista',i:'📋',l:'Lista da Vez'},{k:'vendas',i:'💳',l:'Minhas Vendas'},{k:'metas',i:'🎯',l:'Minhas Metas'},{k:'dashboard',i:'📊',l:'Ranking'},{k:'perfil',i:'👤',l:'Minha Conta'}],
+  vendedora:[{k:'lista',i:'📋',l:'Lista da Vez'},{k:'vendas',i:'💳',l:'Minhas Vendas'},{k:'metas',i:'🎯',l:'Minhas Metas'},{k:'feedback',i:'💬',l:'Feedback'},{k:'estrategias',i:'✨',l:'Plano de Ação'},{k:'dashboard',i:'📊',l:'Ranking'},{k:'perfil',i:'👤',l:'Minha Conta'}],
 };
 const RBT={admin:'👑 Admin',gerente:'👩‍💼 Gerente',vendedora:'🛍️ Vendedora'};
 const RBC={admin:'ba',gerente:'bg',vendedora:'bv'};
@@ -1027,7 +1052,7 @@ function setupRole(){
   const b1=nav.slice(0,2),b2=nav.slice(2,4);
   document.getElementById('bnav-inner').innerHTML=b1.map(n=>`<button class="bnav-item" onclick="navTo('${n.k}')"><span class="icon">${n.i}</span>${n.l}</button>`).join('')+`<button class="bnav-center" onclick="openModal('modal-atd')">＋</button>`+b2.map(n=>`<button class="bnav-item" onclick="navTo('${n.k}')"><span class="icon">${n.i}</span>${n.l}</button>`).join('');
   document.getElementById('btn-cad-v').style.display=can('admin','gerente')?'block':'none';
-  document.getElementById('btn-fb').style.display=can('admin','gerente','vendedora')?'block':'none';
+  document.getElementById('btn-fb').style.display=can('admin','gerente')?'block':'none';
   document.getElementById('btn-est').style.display=can('admin','gerente')?'block':'none';
   const zerarEl=document.getElementById('btn-zerar-vendas');
   if(zerarEl) zerarEl.innerHTML=can('admin')?`<button class="btn-outline" onclick="showConfirm('Zerar TODAS as vendas?',async()=>{for(const v of S.vendas){try{await dbDelete('vendas',v.id);}catch(e){}}await loadAll();toast('Vendas zeradas!');renderAll();},'⚠️','Zerar')">🗑️ Zerar todas</button>`:'';
@@ -1039,9 +1064,38 @@ function setupRole(){
 // === NAV ===
 function navTo(page){
   showPage(page);
-  if(page==='relatorios')setTimeout(()=>{},120);
+  if(page==='relatorios') setTimeout(initRelatorios, 100);
   if(window.innerWidth<=768){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').style.display='none';}
   renderAll();
+}
+
+let _rCharts=[];
+function initRelatorios(){
+  _rCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+  _rCharts=[];
+  const vends=myVendedoras();
+  if(!vends.length) return;
+  const nomes=vends.map(v=>nomeReal(v));
+  const cores=['rgba(255,45,142,0.8)','rgba(0,196,180,0.8)','rgba(255,214,0,0.8)','rgba(106,27,154,0.8)','rgba(255,107,181,0.8)','rgba(0,150,136,0.8)'];
+  const fats=vends.map(v=>realizadoReal(v.id));
+  const convs=vends.map(v=>+(convV(v.id)*100).toFixed(1));
+  const tickets=vends.map(v=>{const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);return vendas.length?+(realizadoReal(v.id)/vendas.length).toFixed(2):0;});
+  const pecas=vends.map(v=>{const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);const tp=S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+x.pecas,0);return atds.length?+(tp/atds.length).toFixed(2):0;});
+  const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+  const c1=document.getElementById('chartVend2');
+  if(c1) _rCharts.push(new Chart(c1,{type:'bar',data:{labels:nomes,datasets:[{data:fats,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{ticks:{callback:v=>'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}}));
+  const c2=document.getElementById('chartConv');
+  if(c2) _rCharts.push(new Chart(c2,{type:'bar',data:{labels:nomes,datasets:[{data:convs,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}}));
+  const c3=document.getElementById('chartTicket');
+  if(c3) _rCharts.push(new Chart(c3,{type:'bar',data:{labels:nomes,datasets:[{data:tickets,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{ticks:{callback:v=>'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}}));
+  const c4=document.getElementById('chartPecas');
+  if(c4) _rCharts.push(new Chart(c4,{type:'bar',data:{labels:nomes,datasets:[{data:pecas,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{beginAtZero:true}}}}));
+  const tbody=document.getElementById('relatorio-tbody');
+  if(tbody) tbody.innerHTML=vends.map((v,i)=>{
+    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
+    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+    return`<tr><td>${v.emoji} ${nomeReal(v)}</td><td style="font-weight:900;color:var(--teal)">${fmt(fats[i])}</td><td>${vendas.length}</td><td>${fmt(tickets[i])}</td><td>${atds.length}</td><td><span style="font-weight:800;color:${convs[i]>=30?'var(--teal)':convs[i]>=20?'#F57F17':'var(--pink)'}">${convs[i].toFixed(1)}%</span></td><td>${pecas[i].toFixed(2)}</td></tr>`;
+  }).join('');
 }
 function showPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1515,70 +1569,82 @@ function renderDashboard(){
   const lojas=myLojas();
   const u=S.currentUser;
   const tabsEl=document.getElementById('dash-loja-tabs');
+  const hoje=new Date().toISOString().split('T')[0];
+  const mesAtual=hoje.slice(0,7); // YYYY-MM
 
-  // ── VENDEDORA: vê só ela mesma ──
+  // Data de hoje formatada
+  const dataHojeFmt=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  const elDataHoje=document.getElementById('dash-data-hoje');
+  if(elDataHoje) elDataHoje.textContent=dataHojeFmt;
+
+  // Determina loja ativa
+  let lojaAtiva=null;
   if(u.role==='vendedora'){
     tabsEl.innerHTML='';
-    const v=getV(u.vendedoraId);
-    if(!v)return;
-    const real=realizadoReal(v.id);
-    const m1=metaVendedora(v,'meta1');
-    const pct=m1?Math.min(real/m1*100,100):0;
-    const atds=S.atendimentos.filter(a=>a.vendedoraId===v.id);
-    const conv=atds.length?(atds.filter(a=>a.resultado==='comprou').length/atds.length*100):0;
-    const minhasVendas=S.vendas.filter(x=>x.vendedoraId===v.id);
-    const ticket=minhasVendas.length?real/minhasVendas.length:0;
-    document.getElementById('fat-hoje').textContent=fmt(real);
-    document.getElementById('fat-sub').textContent=nomeReal(v);
-    document.getElementById('ticket-medio').textContent=fmt(ticket);
-    document.getElementById('conv-geral').textContent=conv.toFixed(1)+'%';
-    document.getElementById('dash-meta1').textContent=fmt(m1);
-    document.getElementById('dash-prog1').style.width=pct+'%';
-    document.getElementById('dash-pct1').textContent=pct.toFixed(1)+'%';
-    // Ranking: posição dela na loja
-    const lojaColegas=S.vendedoras.filter(x=>x.lojaId===v.lojaId);
-    const sorted=[...lojaColegas].sort((a,b)=>realizadoReal(b.id)-realizadoReal(a.id));
-    const pos=sorted.findIndex(x=>x.id===v.id)+1;
-    const maxR=realizadoReal(sorted[0]?.id)||1;
-    document.getElementById('rank-list').innerHTML=sorted.map((sv,i)=>`
-      <div class="rank-item" style="${sv.id===v.id?'background:var(--pink-pale);border-radius:10px;':''}">
-        <div class="rank-num">${i+1}</div><div class="rank-avatar">${sv.emoji}</div>
-        <div class="rank-info"><div class="rank-name">${nomeReal(sv)}${sv.id===v.id?' 👈':''}</div>
-        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(sv.id)/maxR*100).toFixed(0)}%"></div></div></div>
-        <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(sv.id))}</div></div>
-      </div>`).join('');
-    document.getElementById('ultimas-vendas').innerHTML=[...minhasVendas].reverse().slice(0,4).map(x=>`
-      <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--gray-light)">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:14px">${v.emoji}</div>
-        <div style="flex:1"><div style="font-size:11px;font-weight:800">${nomeReal(v)}</div><div style="font-size:10px;color:var(--gray);font-weight:600">${x.pecas} peça(s) · ${x.data}</div></div>
-        <div style="font-size:12px;font-weight:900;color:var(--teal)">${fmt(x.valor)}</div>
-      </div>`).join('');
-    const c=conv;const a=atds;
-    document.getElementById('conv-vendedoras').innerHTML=`<div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:12px;font-weight:800">${v.emoji} ${nomeReal(v)}</span><span style="font-size:12px;font-weight:900;color:var(--pink)">${c.toFixed(0)}%</span></div>
-      <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:3px">${a.filter(x=>x.resultado==='comprou').length} vendas / ${a.length} atendimentos</div>
-      <div class="rank-bar-wrap" style="height:6px"><div class="rank-bar" style="width:${c}%;background:${c>=30?'var(--teal)':c>=20?'var(--yellow)':'var(--pink)'}"></div></div>
-    </div>`;
+    let v=S.vendedoras.find(x=>x.id===u.vendedoraId);
+    if(!v) v=S.vendedoras.find(x=>x.nome===u.nome&&x.lojaId===u.lojaId);
+    if(!v) v=S.vendedoras.find(x=>x.nome===u.nome);
+    if(!v) return;
+    lojaAtiva=getLoja(v.lojaId);
+    _renderDashVendedora(v, hoje, mesAtual);
     return;
   }
-
-  // ── ADMIN: abas de lojas ──
   if(u.role==='admin'&&lojas.length>1){
-    if(!S._dashLojaId)S._dashLojaId=lojas[0].id;
+    if(!S._dashLojaId) S._dashLojaId=lojas[0].id;
     tabsEl.innerHTML=lojas.map(l=>`<button onclick="S._dashLojaId='${l.id}';renderDashboard()" style="padding:7px 16px;border-radius:99px;border:2px solid ${S._dashLojaId===l.id?'var(--pink)':'var(--gray-light)'};background:${S._dashLojaId===l.id?'var(--pink)':'#fff'};color:${S._dashLojaId===l.id?'#fff':'var(--gray)'};font-size:12px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif">🏪 ${l.nome}</button>`).join('');
   } else {
     tabsEl.innerHTML='';
     S._dashLojaId=lojas[0]?.id||null;
   }
-  const lojaAtiva=getLoja(S._dashLojaId)||lojas[0];
-  if(!lojaAtiva)return;
+  lojaAtiva=getLoja(S._dashLojaId)||lojas[0];
+  if(!lojaAtiva) return;
+
   const vends=S.vendedoras.filter(v=>v.lojaId===lojaAtiva.id);
   const ids=vends.map(v=>v.id);
-  const minhasVendas=S.vendas.filter(v=>ids.includes(v.vendedoraId));
-  const fat=fatLoja(lojaAtiva.id);
-  const ticket=minhasVendas.length?fat/minhasVendas.length:0;
-  const convIds=S.atendimentos.filter(a=>ids.includes(a.vendedoraId));
-  const convPct=convIds.length?(convIds.filter(a=>a.resultado==='comprou').length/convIds.length*100):0;
+
+  // ── DADOS DO DIA ──
+  const vendasHoje=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data===hoje);
+  const atdsHoje=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(hoje));
+  const fatDia=vendasHoje.reduce((s,v)=>s+v.valor,0);
+  const ticketDia=vendasHoje.length?fatDia/vendasHoje.length:0;
+  const convDiaPct=atdsHoje.length?(atdsHoje.filter(a=>a.resultado==='comprou').length/atdsHoje.length*100):0;
+  const pecasDia=atdsHoje.length?vendasHoje.reduce((s,v)=>s+v.pecas,0)/Math.max(atdsHoje.length,1):0;
+
+  document.getElementById('fat-dia').textContent=fmt(fatDia);
+  document.getElementById('fat-dia-sub').textContent=lojaAtiva.nome;
+  document.getElementById('ticket-dia').textContent=fmt(ticketDia);
+  document.getElementById('conv-dia').textContent=convDiaPct.toFixed(1)+'%';
+  document.getElementById('pecas-dia').textContent=pecasDia.toFixed(1);
+
+  // Tabela diária por vendedora
+  document.getElementById('dash-dia-vendedoras').innerHTML=`
+    <table class="tbl">
+      <thead><tr><th>Vendedora</th><th>Fat. Hoje</th><th>Vendas</th><th>Ticket</th><th>Conv.</th><th>Peças/Atd</th></tr></thead>
+      <tbody>${vends.map(v=>{
+        const vHoje=S.vendas.filter(x=>x.vendedoraId===v.id&&x.data===hoje);
+        const aHoje=S.atendimentos.filter(x=>x.vendedoraId===v.id&&x.created_at&&x.created_at.startsWith(hoje));
+        const fat=vHoje.reduce((s,x)=>s+x.valor,0);
+        const tk=vHoje.length?fat/vHoje.length:0;
+        const cv=aHoje.length?(aHoje.filter(x=>x.resultado==='comprou').length/aHoje.length*100):0;
+        const pc=aHoje.length?vHoje.reduce((s,x)=>s+x.pecas,0)/Math.max(aHoje.length,1):0;
+        return`<tr>
+          <td><span style="font-size:14px">${v.emoji}</span> ${nomeReal(v)}</td>
+          <td style="font-weight:900;color:var(--teal)">${fmt(fat)}</td>
+          <td>${vHoje.length}</td>
+          <td>${fmt(tk)}</td>
+          <td><span style="font-weight:800;color:${cv>=30?'var(--teal)':cv>=20?'#F57F17':'var(--pink)'}">${cv.toFixed(0)}%</span></td>
+          <td>${pc.toFixed(1)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+
+  // ── DADOS DO MÊS ──
+  const vendasMes=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data&&v.data.startsWith(mesAtual));
+  const atdsMes=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(mesAtual));
+  const fat=vendasMes.reduce((s,v)=>s+v.valor,0);
+  const ticket=vendasMes.length?fat/vendasMes.length:0;
+  const convPct=atdsMes.length?(atdsMes.filter(a=>a.resultado==='comprou').length/atdsMes.length*100):0;
+
   document.getElementById('fat-hoje').textContent=fmt(fat);
   document.getElementById('fat-sub').textContent=lojaAtiva.nome;
   document.getElementById('ticket-medio').textContent=fmt(ticket);
@@ -1587,14 +1653,92 @@ function renderDashboard(){
   document.getElementById('dash-meta1').textContent=fmt(lojaAtiva.meta1||0);
   document.getElementById('dash-prog1').style.width=pct1+'%';
   document.getElementById('dash-pct1').textContent=pct1.toFixed(1)+'%';
+
+  // Ranking mensal
   const sorted=[...vends].sort((a,b)=>realizadoReal(b.id)-realizadoReal(a.id));
   const maxR=realizadoReal(sorted[0]?.id)||1;
   document.getElementById('rank-list').innerHTML=sorted.slice(0,5).map((v,i)=>`
     <div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-avatar">${v.emoji}</div>
     <div class="rank-info"><div class="rank-name">${nomeReal(v)}</div><div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(v.id)/maxR*100).toFixed(0)}%"></div></div></div>
     <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(v.id))}</div><div style="font-size:9px;color:var(--gray);font-weight:700">${(convV(v.id)*100).toFixed(0)}% conv.</div></div></div>`).join('');
-  document.getElementById('ultimas-vendas').innerHTML=[...minhasVendas].reverse().slice(0,4).map(v=>{const vd=getV(v.vendedoraId);return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--gray-light)"><div style="width:30px;height:30px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:14px">${vd?.emoji||'👩'}</div><div style="flex:1"><div style="font-size:11px;font-weight:800">${vd?nomeReal(vd):'—'}</div><div style="font-size:10px;color:var(--gray);font-weight:600">${v.pecas} peça(s) · ${v.data}</div></div><div style="font-size:12px;font-weight:900;color:var(--teal)">${fmt(v.valor)}</div></div>`;}).join('');
-  document.getElementById('conv-vendedoras').innerHTML=vends.map(v=>{const c=convV(v.id)*100;const a=S.atendimentos.filter(x=>x.vendedoraId===v.id);return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;font-weight:800">${v.emoji} ${nomeReal(v)}</span><span style="font-size:11px;font-weight:900;color:var(--pink)">${c.toFixed(0)}%</span></div><div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:3px">${a.filter(x=>x.resultado==='comprou').length} vendas / ${a.length} atds</div><div class="rank-bar-wrap" style="height:4px"><div class="rank-bar" style="width:${c}%;background:${c>=30?'var(--teal)':c>=20?'var(--yellow)':'var(--pink)'}"></div></div></div>`;}).join('');
+
+  // Últimas vendas
+  document.getElementById('ultimas-vendas').innerHTML=[...vendasMes].reverse().slice(0,5).map(v=>{
+    const vd=getV(v.vendedoraId);
+    return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--gray-light)">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:14px">${vd?.emoji||'👩'}</div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:800">${vd?nomeReal(vd):'—'}</div><div style="font-size:10px;color:var(--gray);font-weight:600">${v.pecas} peça(s) · ${v.data}</div></div>
+      <div style="font-size:12px;font-weight:900;color:var(--teal)">${fmt(v.valor)}</div>
+    </div>`;}).join('');
+
+  // Conversão mensal
+  document.getElementById('conv-vendedoras').innerHTML=vends.map(v=>{
+    const c=convV(v.id)*100;
+    const a=S.atendimentos.filter(x=>x.vendedoraId===v.id);
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;font-weight:800">${v.emoji} ${nomeReal(v)}</span><span style="font-size:11px;font-weight:900;color:var(--pink)">${c.toFixed(0)}%</span></div>
+      <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:3px">${a.filter(x=>x.resultado==='comprou').length} vendas / ${a.length} atds</div>
+      <div class="rank-bar-wrap" style="height:4px"><div class="rank-bar" style="width:${c}%;background:${c>=30?'var(--teal)':c>=20?'var(--yellow)':'var(--pink)'}"></div></div>
+    </div>`;}).join('');
+}
+
+function _renderDashVendedora(v, hoje, mesAtual){
+  const real=realizadoReal(v.id);
+  const m1=metaVendedora(v,'meta1');
+  const pct=m1?Math.min(real/m1*100,100):0;
+  const atds=S.atendimentos.filter(a=>a.vendedoraId===v.id);
+  const conv=atds.length?(atds.filter(a=>a.resultado==='comprou').length/atds.length*100):0;
+  const minhasVendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+  const ticket=minhasVendas.length?real/minhasVendas.length:0;
+
+  // Dia
+  const vHoje=minhasVendas.filter(x=>x.data===hoje);
+  const aHoje=atds.filter(x=>x.created_at&&x.created_at.startsWith(hoje));
+  const fatDia=vHoje.reduce((s,x)=>s+x.valor,0);
+  const tkDia=vHoje.length?fatDia/vHoje.length:0;
+  const cvDia=aHoje.length?(aHoje.filter(x=>x.resultado==='comprou').length/aHoje.length*100):0;
+  const pcDia=aHoje.length?vHoje.reduce((s,x)=>s+x.pecas,0)/Math.max(aHoje.length,1):0;
+
+  document.getElementById('fat-dia').textContent=fmt(fatDia);
+  document.getElementById('fat-dia-sub').textContent=v.nome;
+  document.getElementById('ticket-dia').textContent=fmt(tkDia);
+  document.getElementById('conv-dia').textContent=cvDia.toFixed(1)+'%';
+  document.getElementById('pecas-dia').textContent=pcDia.toFixed(1);
+  document.getElementById('dash-dia-vendedoras').innerHTML=`
+    <div style="font-size:12px;font-weight:700;color:var(--gray)">
+      ${vHoje.length} venda(s) hoje · ${aHoje.length} atendimento(s)
+    </div>`;
+
+  // Mês
+  document.getElementById('fat-hoje').textContent=fmt(real);
+  document.getElementById('fat-sub').textContent=v.nome;
+  document.getElementById('ticket-medio').textContent=fmt(ticket);
+  document.getElementById('conv-geral').textContent=conv.toFixed(1)+'%';
+  document.getElementById('dash-meta1').textContent=fmt(m1);
+  document.getElementById('dash-prog1').style.width=pct+'%';
+  document.getElementById('dash-pct1').textContent=pct.toFixed(1)+'%';
+
+  const lojaColegas=S.vendedoras.filter(x=>x.lojaId===v.lojaId);
+  const sorted=[...lojaColegas].sort((a,b)=>realizadoReal(b.id)-realizadoReal(a.id));
+  const maxR=realizadoReal(sorted[0]?.id)||1;
+  document.getElementById('rank-list').innerHTML=sorted.map((sv,i)=>`
+    <div class="rank-item" style="${sv.id===v.id?'background:var(--pink-pale);border-radius:10px;':''}">
+      <div class="rank-num">${i+1}</div><div class="rank-avatar">${sv.emoji}</div>
+      <div class="rank-info"><div class="rank-name">${nomeReal(sv)}${sv.id===v.id?' 👈':''}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(sv.id)/maxR*100).toFixed(0)}%"></div></div></div>
+      <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(sv.id))}</div></div>
+    </div>`).join('');
+  document.getElementById('ultimas-vendas').innerHTML=[...minhasVendas].reverse().slice(0,4).map(x=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--gray-light)">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:14px">${v.emoji}</div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:800">${nomeReal(v)}</div><div style="font-size:10px;color:var(--gray);font-weight:600">${x.pecas} peça(s) · ${x.data}</div></div>
+      <div style="font-size:12px;font-weight:900;color:var(--teal)">${fmt(x.valor)}</div>
+    </div>`).join('');
+  document.getElementById('conv-vendedoras').innerHTML=`<div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:12px;font-weight:800">${v.emoji} ${nomeReal(v)}</span><span style="font-size:12px;font-weight:900;color:var(--pink)">${conv.toFixed(0)}%</span></div>
+    <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:3px">${atds.filter(x=>x.resultado==='comprou').length} vendas / ${atds.length} atds</div>
+    <div class="rank-bar-wrap" style="height:6px"><div class="rank-bar" style="width:${conv}%;background:${conv>=30?'var(--teal)':conv>=20?'var(--yellow)':'var(--pink)'}"></div></div>
+  </div>`;
 }
 
 function renderLista(){
@@ -1832,8 +1976,32 @@ function renderVendedoras(){
 }
 
 function renderFeedbacks(){
+  const u=S.currentUser;
   const lojas=myLojas();
   const canEdit=can('admin','gerente');
+
+  // Vendedora vê só os feedbacks dela
+  if(u.role==='vendedora'){
+    let v=S.vendedoras.find(x=>x.id===u.vendedoraId);
+    if(!v) v=S.vendedoras.find(x=>x.nome===u.nome);
+    const fbs=v?S.feedbacks.filter(f=>f.vendedoraId===v.id):[];
+    if(!fbs.length){
+      document.getElementById('feedback-list').innerHTML=`<div class="loja-section"><div style="font-size:13px;color:var(--gray);font-weight:600;padding:12px 0;text-align:center">Nenhum feedback registrado ainda.</div></div>`;
+      return;
+    }
+    document.getElementById('feedback-list').innerHTML=`<div class="loja-section">${fbs.map(f=>`
+      <div class="fb-item">
+        <div class="fb-header">
+          <div class="fb-avatar">${v?.emoji||'👩'}</div>
+          <div><div class="fb-name">${nomeReal(v)}</div><div class="fb-date">${f.data||f.data_registro||''}</div></div>
+          <span class="fb-tag ${f.tipo}" style="margin-left:auto">${f.tipo==='positivo'?'⭐ Positivo':'🔧 Melhoria'}</span>
+        </div>
+        <div class="fb-text">${f.texto}</div>
+      </div>`).join('')}</div>`;
+    return;
+  }
+
+  // Admin/gerente vê por loja
   document.getElementById('feedback-list').innerHTML=lojas.map(loja=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===loja.id).map(v=>v.id);
     const fbs=S.feedbacks.filter(f=>vends.includes(f.vendedoraId));
@@ -1842,15 +2010,13 @@ function renderFeedbacks(){
       <div class="loja-header"><div class="loja-nome">🏪 ${loja.nome}</div></div>
       ${fbs.map(f=>{
         const v=getV(f.vendedoraId);
-        const atts=(f.attachments||[]).map(a=>a.type==='application/pdf'?`<div class="fb-att-pdf" onclick="window.open('${a.url}','_blank')">📄<span>${a.name.slice(0,10)}</span></div>`:`<img class="fb-att" src="${a.url}" onclick="openLightbox('${a.url}')">`).join('');
         return`<div class="fb-item">
           <div class="fb-header">
             <div class="fb-avatar">${v?.emoji||'👩'}</div>
-            <div><div class="fb-name">${v?nomeReal(v):'—'}</div><div class="fb-date">${f.data}</div></div>
+            <div><div class="fb-name">${v?nomeReal(v):'—'}</div><div class="fb-date">${f.data||f.data_registro||''}</div></div>
             <span class="fb-tag ${f.tipo}" style="margin-left:auto">${f.tipo==='positivo'?'⭐ Positivo':'🔧 Melhoria'}</span>
           </div>
           <div class="fb-text">${f.texto}</div>
-          ${atts?`<div class="fb-attachments">${atts}</div>`:''}
           ${canEdit?`<div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm btn-edit" onclick="openEditFeedback('${f.id}')">✏️ Editar</button><button class="btn-sm btn-del" onclick="excluirFeedback('${f.id}')">🗑️ Excluir</button></div>`:''}
         </div>`;
       }).join('')}
@@ -1860,17 +2026,18 @@ function renderFeedbacks(){
 
 function renderEstrategias(){
   const lbls={planejando:'📌 Planejando',andamento:'🚀 Em andamento',concluida:'✅ Concluída'};
+  const u=S.currentUser;
   const lojas=myLojas();
   const canEdit=can('admin','gerente');
   document.getElementById('estrategia-list').innerHTML=lojas.map(loja=>{
-    const ests=S.estrategias.filter(e=>e.lojaId===loja.id||(e.lojaId==null&&S.lojas.length===1));
+    const ests=S.estrategias.filter(e=>e.lojaId===loja.id||(e.lojaId==null));
     return`<div class="loja-section" style="margin-bottom:14px">
-      <div class="loja-header"><div class="loja-nome">🏪 ${loja.nome}</div></div>
+      ${u.role!=='vendedora'?`<div class="loja-header"><div class="loja-nome">🏪 ${loja.nome}</div></div>`:''}
       ${ests.length===0?`<div style="font-size:12px;color:var(--gray);font-weight:600;padding:8px 0">Nenhuma estratégia ainda.</div>`:''}
       ${ests.map(e=>`
         <div class="est-item ${e.cor}" style="margin-bottom:8px">
           <div style="font-size:13px;font-weight:800">${e.titulo}</div>
-          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:2px">${e.desc}</div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:2px">${e.desc||e.descricao||''}</div>
           <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between">
             <span style="font-size:11px;font-weight:700">${lbls[e.status]||e.status}</span>
             ${canEdit?`<div style="display:flex;gap:5px"><button class="btn-sm btn-edit" onclick="openEditEstrategia('${e.id}')">✏️</button><button class="btn-sm btn-del" onclick="excluirEstrategia('${e.id}')">🗑️</button></div>`:''}
