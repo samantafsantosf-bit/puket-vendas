@@ -224,6 +224,18 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 </style>
 </head>
 <body>
+<script>
+// Wrappers para garantir que as funções existam quando o HTML carrega
+function doLogin(){ if(typeof _doLogin==='function') _doLogin(); else setTimeout(doLogin,100); }
+function _togglePw(id,btn){
+window.togglePw=_togglePw; if(typeof _togglePw==='function') _togglePw(id,btn); else setTimeout(()=>togglePw(id,btn),100); }
+function _doLogout(){
+window.doLogout=_doLogout; if(typeof _doLogout==='function') _doLogout(); else setTimeout(doLogout,100); }
+function _openModal(id){
+window.openModal=_openModal; if(typeof _openModal==='function') _openModal(id); else setTimeout(()=>openModal(id),100); }
+function _closeModal(id){
+window.closeModal=_closeModal; if(typeof _closeModal==='function') _closeModal(id); else setTimeout(()=>closeModal(id),100); }
+</script>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -1019,7 +1031,8 @@ function confirmReject(){document.getElementById('modal-confirm').classList.remo
 // === LOGIN ===
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('login-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-pass').focus();});
-async function doLogin(){
+async function _doLogin(){
+window.doLogin=_doLogin;
   const u=document.getElementById('login-user').value.trim().toLowerCase();
   const p=document.getElementById('login-pass').value;
   const errEl=document.getElementById('login-err');
