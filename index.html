@@ -284,31 +284,36 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
+    <!-- Navegação de mês com setas -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:var(--radius);padding:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <button onclick="mudarMesDash(-1)" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center">‹</button>
+      <div style="text-align:center;flex:1">
+        <div style="font-size:16px;font-weight:900;color:var(--dark)" id="dash-mes-titulo">Julho 2026</div>
+        <div id="dash-mes-atual-label" style="font-size:10px;color:var(--pink);font-weight:700;display:none">← mês atual</div>
+      </div>
+      <button onclick="mudarMesDash(1)" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center">›</button>
+    </div>
+
     <!-- Abas de loja (admin vê todas) -->
     <div id="dash-loja-tabs" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"></div>
 
-    <!-- SEÇÃO DIÁRIA -->
-    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📅 Hoje — <span id="dash-data-hoje"></span></div>
-    <div class="stat-grid" style="margin-bottom:10px">
-      <div class="stat-card teal"><span class="stat-icon">💰</span><div class="stat-label">Fat. Hoje</div><div class="stat-value" id="fat-dia">R$ 0</div><div class="stat-sub" id="fat-dia-sub">da loja</div></div>
-      <div class="stat-card pink"><span class="stat-icon">🏷️</span><div class="stat-label">Ticket Médio</div><div class="stat-value" id="ticket-dia">R$ 0</div><div class="stat-sub">hoje</div></div>
-      <div class="stat-card yellow"><span class="stat-icon">🔄</span><div class="stat-label">Conversão</div><div class="stat-value" id="conv-dia">0%</div><div class="stat-sub">hoje</div></div>
-      <div class="stat-card purple"><span class="stat-icon">👗</span><div class="stat-label">Peças/Atd.</div><div class="stat-value" id="pecas-dia">0</div><div class="stat-sub">hoje</div></div>
-    </div>
-    <!-- Tabela diária por vendedora -->
-    <div class="card" style="margin-bottom:14px">
-      <div class="card-header"><div class="card-title">Desempenho do Dia por Vendedora</div></div>
-      <div id="dash-dia-vendedoras"></div>
-    </div>
-
-    <!-- Vendas por vendedora hoje -->
-    <div class="card" style="margin-bottom:14px" id="card-vendas-dia-vend">
-      <div class="card-header"><div class="card-title">💳 Vendas de Hoje por Vendedora</div></div>
-      <div id="dash-vendas-dia-vend"></div>
+    <!-- SEÇÃO DIÁRIA (só aparece no mês atual) -->
+    <div id="dash-secao-dia">
+      <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📅 Hoje — <span id="dash-data-hoje"></span></div>
+      <div class="stat-grid" style="margin-bottom:10px">
+        <div class="stat-card teal"><span class="stat-icon">💰</span><div class="stat-label">Fat. Hoje</div><div class="stat-value" id="fat-dia">R$ 0</div><div class="stat-sub" id="fat-dia-sub">da loja</div></div>
+        <div class="stat-card pink"><span class="stat-icon">🏷️</span><div class="stat-label">Ticket Médio</div><div class="stat-value" id="ticket-dia">R$ 0</div><div class="stat-sub">hoje</div></div>
+        <div class="stat-card yellow"><span class="stat-icon">🔄</span><div class="stat-label">Conversão</div><div class="stat-value" id="conv-dia">0%</div><div class="stat-sub">hoje</div></div>
+        <div class="stat-card purple"><span class="stat-icon">👗</span><div class="stat-label">P.A</div><div class="stat-value" id="pecas-dia">0</div><div class="stat-sub">hoje</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><div class="card-title">Desempenho do Dia por Vendedora</div></div>
+        <div id="dash-dia-vendedoras"></div>
+      </div>
     </div>
 
     <!-- SEÇÃO MENSAL -->
-    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px">📊 Mês Atual</div>
+    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px">📊 <span id="dash-mes-label">Mês Atual</span></div>
     <div class="stat-grid" style="margin-bottom:10px">
       <div class="stat-card teal"><span class="stat-icon">💰</span><div class="stat-label">Faturamento</div><div class="stat-value" id="fat-hoje">R$ 0</div><div class="stat-sub" id="fat-sub">da loja</div></div>
       <div class="stat-card pink"><span class="stat-icon">🎯</span><div class="stat-label">1ª Meta</div><div class="stat-value" id="dash-meta1">—</div><div class="prog-track"><div class="prog-fill" id="dash-prog1" style="width:0%"></div></div><div class="prog-pct" id="dash-pct1">0%</div></div>
@@ -1384,7 +1389,14 @@ async function salvarAtd(){
   if(!vId){toast('Selecione a vendedora!');return;}
   if(!S.resultado){toast('Marque se comprou ou nao!');return;}
   try{
-    await dbInsert('atendimentos',{vendedora_id:vId,cliente:cli,resultado:S.resultado,obs});
+    await dbInsert('atendimentos',{
+      vendedora_id:vId,
+      loja_id:vd?.lojaId||null,
+      cliente:cli,
+      resultado:S.resultado,
+      obs,
+      data:new Date().toISOString().split('T')[0]
+    });
     await loadAll();closeModal('modal-atd');document.getElementById('atd-cliente').value='';document.getElementById('atd-obs').value='';
     toast('Atendimento salvo! ✅');renderAll();
   }catch(e){toast('Erro: '+e.message);}
@@ -1665,14 +1677,39 @@ document.getElementById('lightbox').addEventListener('click',function(e){if(e.ta
 // === RENDER ===
 function renderAll(){renderDashboard();renderLista();renderVendas();renderVendedoras();renderMetas();renderFeedbacks();renderEstrategias();renderUsuarios();renderLojas();renderVm();renderPerfil();}
 
+// Mês selecionado no dashboard (YYYY-MM)
+let _dashMes = new Date().toISOString().slice(0,7);
+
+function mudarMesDash(dir){
+  const [ano,mes] = _dashMes.split('-').map(Number);
+  const d = new Date(ano, mes-1+dir, 1);
+  _dashMes = d.toISOString().slice(0,7);
+  renderDashboard();
+}
+
 function renderDashboard(){
   const lojas=myLojas();
   const u=S.currentUser;
   const tabsEl=document.getElementById('dash-loja-tabs');
   const hoje=new Date().toISOString().split('T')[0];
-  const mesAtual=hoje.slice(0,7); // YYYY-MM
+  const mesAtual=new Date().toISOString().slice(0,7);
+  const mesSelec=_dashMes; // mês selecionado pelas setas
+  const ehMesAtual=mesSelec===mesAtual;
 
-  // Data de hoje formatada
+  // Atualiza título do mês
+  const nomeMesSel=new Date(mesSelec+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const nomeMesSelFmt=nomeMesSel.charAt(0).toUpperCase()+nomeMesSel.slice(1);
+  const elTitulo=document.getElementById('dash-mes-titulo');
+  if(elTitulo) elTitulo.textContent=nomeMesSelFmt;
+  const elAtualLabel=document.getElementById('dash-mes-atual-label');
+  if(elAtualLabel) elAtualLabel.style.display=ehMesAtual?'none':'block';
+  const elMesLabel=document.getElementById('dash-mes-label');
+  if(elMesLabel) elMesLabel.textContent=nomeMesSelFmt;
+
+  // Seção diária só aparece no mês atual
+  const secaoDia=document.getElementById('dash-secao-dia');
+  if(secaoDia) secaoDia.style.display=ehMesAtual?'block':'none';
+
   const dataHojeFmt=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
   const elDataHoje=document.getElementById('dash-data-hoje');
   if(elDataHoje) elDataHoje.textContent=dataHojeFmt;
@@ -1686,7 +1723,7 @@ function renderDashboard(){
     if(!v) v=S.vendedoras.find(x=>x.nome===u.nome);
     if(!v) return;
     lojaAtiva=getLoja(v.lojaId);
-    _renderDashVendedora(v, hoje, mesAtual);
+    _renderDashVendedora(v, hoje, mesSelec);
     return;
   }
   if(u.role==='admin'&&lojas.length>1){
@@ -1704,7 +1741,7 @@ function renderDashboard(){
 
   // ── DADOS DO DIA ──
   const vendasHoje=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data===hoje);
-  const atdsHoje=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(hoje));
+  const atdsHoje=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&(a.data===hoje||(a.created_at&&a.created_at.startsWith(hoje))));
   const fatDia=vendasHoje.reduce((s,v)=>s+v.valor,0);
   // Ticket = fat / nº vendas (não atendimentos)
   const ticketDia=vendasHoje.length?fatDia/vendasHoje.length:0;
@@ -1740,25 +1777,10 @@ function renderDashboard(){
       }).join('')}</tbody>
     </table>`;
 
-  // Vendas individuais de hoje por vendedora (lista de cada venda)
-  const elVendasDia=document.getElementById('dash-vendas-dia-vend');
-  if(elVendasDia){
-    elVendasDia.innerHTML=vends.map(v=>{
-      const vHoje=S.vendas.filter(x=>x.vendedoraId===v.id&&x.data===hoje);
-      const fat=vHoje.reduce((s,x)=>s+x.valor,0);
-      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--gray-light)">
-        <div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px">${v.emoji}</div>
-        <div style="flex:1"><div style="font-size:12px;font-weight:800">${nomeReal(v)}</div>
-        <div style="font-size:10px;color:var(--gray);font-weight:600">${vHoje.length} venda(s) · ${vHoje.reduce((s,x)=>s+(x.pecas||0),0)} peça(s)</div></div>
-        <div style="font-size:14px;font-weight:900;color:${fat>0?'var(--teal)':'var(--gray)'}">${fmt(fat)}</div>
-      </div>`;
-    }).join('') || '<div style="color:var(--gray);font-size:12px;font-weight:600;padding:10px 0">Nenhuma venda registrada hoje.</div>';
-  }
-
-  // ── DADOS DO MÊS ──
-  const nomeMes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-  const vendasMes=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data&&v.data.startsWith(mesAtual));
-  const atdsMes=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(mesAtual));
+  // ── DADOS DO MÊS SELECIONADO ──
+  const nomeMes=nomeMesSelFmt;
+  const vendasMes=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data&&v.data.startsWith(mesSelec));
+  const atdsMes=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&(a.data||a.created_at?.split('T')[0]||'').startsWith(mesSelec));
   const fat=vendasMes.reduce((s,v)=>s+v.valor,0);
   // Ticket = fat / nº vendas
   const ticket=vendasMes.length?fat/vendasMes.length:0;
@@ -1801,13 +1823,19 @@ function renderDashboard(){
     </div>`;}).join('');
 }
 
-function _renderDashVendedora(v, hoje, mesAtual){
-  const real=realizadoReal(v.id);
+function _renderDashVendedora(v, hoje, mesSelec){
+  const nomeMesSel=new Date(mesSelec+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const nomeMesSelFmt=nomeMesSel.charAt(0).toUpperCase()+nomeMesSel.slice(1);
+  const ehMesAtual=mesSelec===new Date().toISOString().slice(0,7);
+  const secaoDia=document.getElementById('dash-secao-dia');
+  if(secaoDia) secaoDia.style.display=ehMesAtual?'block':'none';
+  // Filtra vendas do mês selecionado
+  const minhasVendas=S.vendas.filter(x=>x.vendedoraId===v.id&&(x.data||'').startsWith(mesSelec));
+  const real=minhasVendas.reduce((s,x)=>s+x.valor,0);
   const m1=metaVendedora(v,'meta1');
   const pct=m1?Math.min(real/m1*100,100):0;
   const atds=S.atendimentos.filter(a=>a.vendedoraId===v.id);
   const conv=atds.length?(atds.filter(a=>a.resultado==='comprou').length/atds.length*100):0;
-  const minhasVendas=S.vendas.filter(x=>x.vendedoraId===v.id);
   const ticket=minhasVendas.length?real/minhasVendas.length:0;
 
   // Dia
@@ -1888,9 +1916,10 @@ function renderLista(){
   const domFiltro=(()=>{const d=new Date(segFiltro+'T12:00:00');d.setDate(d.getDate()+6);return d.toISOString().split('T')[0];})();
   const mesFiltro=dataFiltro.slice(0,7);
 
-  function dentroDoRange(created_at){
-    if(!created_at) return true;
-    const d=created_at.split('T')[0];
+  function dentroDoRange(created_at, data_campo){
+    // Usa campo 'data' se disponível, senão usa created_at convertido para local
+    const d = data_campo || (created_at ? created_at.split('T')[0] : null);
+    if(!d) return true;
     if(_listaTab==='dia') return d===dataFiltro;
     if(_listaTab==='semana') return d>=segFiltro&&d<=domFiltro;
     return d.startsWith(mesFiltro);
@@ -1905,7 +1934,7 @@ function renderLista(){
   const convSemEl=document.getElementById('lista-conv-semanal');
   if(convSemEl&&can('admin','gerente')){
     const vends=myVendedoras();
-    const atdsSem=S.atendimentos.filter(a=>vends.map(v=>v.id).includes(a.vendedoraId)&&a.created_at&&a.created_at.split('T')[0]>=segFiltro&&a.created_at.split('T')[0]<=domFiltro);
+    const atdsSem=S.atendimentos.filter(a=>vends.map(v=>v.id).includes(a.vendedoraId)&&(a.data||a.created_at?.split('T')[0])>=segFiltro&&(a.data||a.created_at?.split('T')[0])<=domFiltro);
     const convSem=atdsSem.length?(atdsSem.filter(a=>a.resultado==='comprou').length/atdsSem.length*100):0;
     convSemEl.innerHTML=`<div class="card" style="padding:12px 16px">
       <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Conversão Semanal (${fmtD(segFiltro)} a ${fmtD(domFiltro)})</div>
@@ -1919,7 +1948,7 @@ function renderLista(){
 
   if(u.role==='vendedora'){
     let v=S.vendedoras.find(x=>x.id===u.vendedoraId)||S.vendedoras.find(x=>x.nome===u.nome);
-    const atds=v?S.atendimentos.filter(a=>a.vendedoraId===v.id&&dentroDoRange(a.created_at)):[];
+    const atds=v?S.atendimentos.filter(a=>a.vendedoraId===v.id&&dentroDoRange(a.created_at,a.data)):[];
     const vendas=atds.filter(a=>a.resultado==='comprou').length;
     const conv=atds.length?(vendas/atds.length*100).toFixed(1):0;
     document.getElementById('lista-por-loja').innerHTML=`<div class="loja-section">
@@ -1941,7 +1970,7 @@ function renderLista(){
 
   document.getElementById('lista-por-loja').innerHTML=lojas.map(loja=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===loja.id).map(v=>v.id);
-    const atds=S.atendimentos.filter(a=>vends.includes(a.vendedoraId)&&dentroDoRange(a.created_at));
+    const atds=S.atendimentos.filter(a=>vends.includes(a.vendedoraId)&&dentroDoRange(a.created_at,a.data));
     const vendas=atds.filter(a=>a.resultado==='comprou').length;
     const conv=atds.length?(vendas/atds.length*100).toFixed(1):0;
     return`<div class="loja-section" style="margin-bottom:14px">
