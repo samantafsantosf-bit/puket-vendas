@@ -301,6 +301,12 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
       <div id="dash-dia-vendedoras"></div>
     </div>
 
+    <!-- Vendas por vendedora hoje -->
+    <div class="card" style="margin-bottom:14px" id="card-vendas-dia-vend">
+      <div class="card-header"><div class="card-title">💳 Vendas de Hoje por Vendedora</div></div>
+      <div id="dash-vendas-dia-vend"></div>
+    </div>
+
     <!-- SEÇÃO MENSAL -->
     <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px">📊 Mês Atual</div>
     <div class="stat-grid" style="margin-bottom:10px">
@@ -332,12 +338,20 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   <div class="page" id="page-lista">
     <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn-primary" onclick="openModal('modal-atd')">+ Novo Atendimento</button>
-      <div class="meta-tabs" style="margin:0;flex:1;min-width:200px">
-        <button class="meta-tab active" onclick="setListaTab(this,'dia')">Hoje</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:11px;font-weight:800;color:var(--gray)">Data:</label>
+        <input class="form-input" type="date" id="lista-data-filtro" style="padding:7px 10px;font-size:12px;width:auto" onchange="renderLista()">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="meta-tabs">
+        <button class="meta-tab active" onclick="setListaTab(this,'dia')">Dia selecionado</button>
         <button class="meta-tab" onclick="setListaTab(this,'semana')">Semana</button>
         <button class="meta-tab" onclick="setListaTab(this,'mes')">Mês</button>
       </div>
     </div>
+    <!-- Conversão semanal resumida -->
+    <div id="lista-conv-semanal" style="margin-bottom:12px"></div>
     <div id="lista-por-loja"></div>
   </div>
 
@@ -434,7 +448,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     <div class="card">
       <div class="card-header"><div class="card-title">Resumo por Vendedora</div></div>
       <div style="overflow-x:auto"><table class="tbl">
-        <thead><tr><th>Vendedora</th><th>Faturamento</th><th>Nº Vendas</th><th>Total Peças</th><th>Ticket Médio</th><th>Atendimentos</th><th>Conversão</th><th>Peças/Atd</th></tr></thead>
+        <thead><tr><th>Vendedora</th><th>Faturamento</th><th>Nº Vendas</th><th>Total Peças</th><th>Ticket Médio</th><th>Conversão</th><th>P.A</th></tr></thead>
         <tbody id="relatorio-tbody"></tbody>
       </table></div>
     </div>
@@ -1084,27 +1098,29 @@ function initRelatorios(){
   const nomes=vends.map(v=>nomeReal(v));
   const cores=['#FF2D8E','#00C4B4','#FFD600','#6A1B9A','#FF6BB5','#009E90','#F57F17','#E91E63'];
 
-  // Calculos corretos
   const fats=vends.map(v=>realizadoReal(v.id));
-  // Conversão = atds com compra / total atds
+
+  // Conversão = compras / total atds
   const convs=vends.map(v=>{
     const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
     return atds.length?+(atds.filter(x=>x.resultado==='comprou').length/atds.length*100).toFixed(1):0;
   });
-  // Ticket médio = soma vendas / qtd atendimentos
+
+  // Ticket médio = valor total vendido / nº de VENDAS (não atendimentos)
   const tickets=vends.map(v=>{
-    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id).length;
-    const fat=realizadoReal(v.id);
-    return atds?+(fat/atds).toFixed(2):0;
+    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+    return vendas.length?+(realizadoReal(v.id)/vendas.length).toFixed(2):0;
   });
-  // Peças/Atd = soma de peças / qtd atendimentos
+
+  // P.A = total de peças / nº de VENDAS (não atendimentos)
   const pecasAtd=vends.map(v=>{
-    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id).length;
-    const tp=S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+(x.pecas||0),0);
-    return atds?+(tp/atds).toFixed(2):0;
+    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+    const tp=vendas.reduce((s,x)=>s+(x.pecas||0),0);
+    return vendas.length?+(tp/vendas.length).toFixed(2):0;
   });
-  // Total peças vendidas
+
   const totalPecas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+(x.pecas||0),0));
+  const nVendas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id).length);
 
   const pieOpts=(titulo)=>({
     type:'pie',
@@ -1120,28 +1136,22 @@ function initRelatorios(){
 
   const c1=document.getElementById('chartVend2');
   if(c1) _rCharts.push(new Chart(c1,{...pieOpts('Faturamento'),data:{labels:nomes,datasets:[{data:fats,backgroundColor:cores}]}}));
-
   const c2=document.getElementById('chartConv');
   if(c2) _rCharts.push(new Chart(c2,{...pieOpts('Conversão (%)'),data:{labels:nomes.map((n,i)=>`${n} ${convs[i]}%`),datasets:[{data:convs,backgroundColor:cores}]}}));
-
   const c3=document.getElementById('chartTicket');
   if(c3) _rCharts.push(new Chart(c3,{...pieOpts('Ticket Médio'),data:{labels:nomes,datasets:[{data:tickets,backgroundColor:cores}]}}));
-
   const c4=document.getElementById('chartPecas');
-  if(c4) _rCharts.push(new Chart(c4,{...pieOpts('Peças/Atendimento'),data:{labels:nomes.map((n,i)=>`${n} ${pecasAtd[i]}`),datasets:[{data:pecasAtd,backgroundColor:cores}]}}));
+  if(c4) _rCharts.push(new Chart(c4,{...pieOpts('P.A (Peças/Venda)'),data:{labels:nomes.map((n,i)=>`${n} ${pecasAtd[i]}`),datasets:[{data:pecasAtd,backgroundColor:cores}]}}));
 
-  // Tabela resumo completa
+  // Tabela — sem coluna Atendimentos
   const tbody=document.getElementById('relatorio-tbody');
   if(tbody) tbody.innerHTML=vends.map((v,i)=>{
-    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
-    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
     return`<tr>
       <td>${v.emoji} ${nomeReal(v)}</td>
       <td style="font-weight:900;color:var(--teal)">${fmt(fats[i])}</td>
-      <td>${vendas.length}</td>
+      <td>${nVendas[i]}</td>
       <td style="font-weight:800;color:var(--purple)">${totalPecas[i]}</td>
       <td>${fmt(tickets[i])}</td>
-      <td>${atds.length}</td>
       <td><span style="font-weight:800;color:${convs[i]>=30?'var(--teal)':convs[i]>=20?'#F57F17':'var(--pink)'}">${convs[i].toFixed(1)}%</span></td>
       <td>${pecasAtd[i].toFixed(2)}</td>
     </tr>`;
@@ -1696,9 +1706,11 @@ function renderDashboard(){
   const vendasHoje=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data===hoje);
   const atdsHoje=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(hoje));
   const fatDia=vendasHoje.reduce((s,v)=>s+v.valor,0);
+  // Ticket = fat / nº vendas (não atendimentos)
   const ticketDia=vendasHoje.length?fatDia/vendasHoje.length:0;
   const convDiaPct=atdsHoje.length?(atdsHoje.filter(a=>a.resultado==='comprou').length/atdsHoje.length*100):0;
-  const pecasDia=atdsHoje.length?vendasHoje.reduce((s,v)=>s+v.pecas,0)/Math.max(atdsHoje.length,1):0;
+  // PA = total peças / nº vendas
+  const pecasDia=vendasHoje.length?vendasHoje.reduce((s,v)=>s+(v.pecas||0),0)/vendasHoje.length:0;
 
   document.getElementById('fat-dia').textContent=fmt(fatDia);
   document.getElementById('fat-dia-sub').textContent=lojaAtiva.nome;
@@ -1706,17 +1718,17 @@ function renderDashboard(){
   document.getElementById('conv-dia').textContent=convDiaPct.toFixed(1)+'%';
   document.getElementById('pecas-dia').textContent=pecasDia.toFixed(1);
 
-  // Tabela diária por vendedora
+  // Tabela diária por vendedora (desempenho)
   document.getElementById('dash-dia-vendedoras').innerHTML=`
     <table class="tbl">
-      <thead><tr><th>Vendedora</th><th>Fat. Hoje</th><th>Vendas</th><th>Ticket</th><th>Conv.</th><th>Peças/Atd</th></tr></thead>
+      <thead><tr><th>Vendedora</th><th>Fat. Hoje</th><th>Vendas</th><th>Ticket</th><th>Conv.</th><th>P.A</th></tr></thead>
       <tbody>${vends.map(v=>{
         const vHoje=S.vendas.filter(x=>x.vendedoraId===v.id&&x.data===hoje);
         const aHoje=S.atendimentos.filter(x=>x.vendedoraId===v.id&&x.created_at&&x.created_at.startsWith(hoje));
         const fat=vHoje.reduce((s,x)=>s+x.valor,0);
         const tk=vHoje.length?fat/vHoje.length:0;
         const cv=aHoje.length?(aHoje.filter(x=>x.resultado==='comprou').length/aHoje.length*100):0;
-        const pc=aHoje.length?vHoje.reduce((s,x)=>s+x.pecas,0)/Math.max(aHoje.length,1):0;
+        const pc=vHoje.length?vHoje.reduce((s,x)=>s+(x.pecas||0),0)/vHoje.length:0;
         return`<tr>
           <td><span style="font-size:14px">${v.emoji}</span> ${nomeReal(v)}</td>
           <td style="font-weight:900;color:var(--teal)">${fmt(fat)}</td>
@@ -1728,15 +1740,32 @@ function renderDashboard(){
       }).join('')}</tbody>
     </table>`;
 
+  // Vendas individuais de hoje por vendedora (lista de cada venda)
+  const elVendasDia=document.getElementById('dash-vendas-dia-vend');
+  if(elVendasDia){
+    elVendasDia.innerHTML=vends.map(v=>{
+      const vHoje=S.vendas.filter(x=>x.vendedoraId===v.id&&x.data===hoje);
+      const fat=vHoje.reduce((s,x)=>s+x.valor,0);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--gray-light)">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px">${v.emoji}</div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:800">${nomeReal(v)}</div>
+        <div style="font-size:10px;color:var(--gray);font-weight:600">${vHoje.length} venda(s) · ${vHoje.reduce((s,x)=>s+(x.pecas||0),0)} peça(s)</div></div>
+        <div style="font-size:14px;font-weight:900;color:${fat>0?'var(--teal)':'var(--gray)'}">${fmt(fat)}</div>
+      </div>`;
+    }).join('') || '<div style="color:var(--gray);font-size:12px;font-weight:600;padding:10px 0">Nenhuma venda registrada hoje.</div>';
+  }
+
   // ── DADOS DO MÊS ──
+  const nomeMes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   const vendasMes=S.vendas.filter(v=>ids.includes(v.vendedoraId)&&v.data&&v.data.startsWith(mesAtual));
   const atdsMes=S.atendimentos.filter(a=>ids.includes(a.vendedoraId)&&a.created_at&&a.created_at.startsWith(mesAtual));
   const fat=vendasMes.reduce((s,v)=>s+v.valor,0);
+  // Ticket = fat / nº vendas
   const ticket=vendasMes.length?fat/vendasMes.length:0;
   const convPct=atdsMes.length?(atdsMes.filter(a=>a.resultado==='comprou').length/atdsMes.length*100):0;
 
   document.getElementById('fat-hoje').textContent=fmt(fat);
-  document.getElementById('fat-sub').textContent=lojaAtiva.nome;
+  document.getElementById('fat-sub').textContent=lojaAtiva.nome+' — '+nomeMes;
   document.getElementById('ticket-medio').textContent=fmt(ticket);
   document.getElementById('conv-geral').textContent=convPct.toFixed(1)+'%';
   const pct1=lojaAtiva.meta1?Math.min(fat/lojaAtiva.meta1*100,100):0;
@@ -1844,19 +1873,49 @@ function renderLista(){
   const lojas=myLojas();
   const hoje=new Date().toISOString().split('T')[0];
 
+  // Data selecionada no filtro
+  const dataFiltroEl=document.getElementById('lista-data-filtro');
+  if(dataFiltroEl&&!dataFiltroEl.value) dataFiltroEl.value=hoje;
+  const dataFiltro=dataFiltroEl?.value||hoje;
+
+  function getSegundaFeira(d){
+    const dt=new Date(d+'T12:00:00');
+    const dow=dt.getDay();
+    dt.setDate(dt.getDate()-(dow===0?6:dow-1));
+    return dt.toISOString().split('T')[0];
+  }
+  const segFiltro=getSegundaFeira(dataFiltro);
+  const domFiltro=(()=>{const d=new Date(segFiltro+'T12:00:00');d.setDate(d.getDate()+6);return d.toISOString().split('T')[0];})();
+  const mesFiltro=dataFiltro.slice(0,7);
+
   function dentroDoRange(created_at){
-    if(!created_at) return true; // sem data, inclui sempre
+    if(!created_at) return true;
     const d=created_at.split('T')[0];
-    if(_listaTab==='dia') return d===hoje;
-    if(_listaTab==='semana'){
-      const now=new Date(),dow=now.getDay();
-      const seg=new Date(now); seg.setDate(now.getDate()-(dow===0?6:dow-1));
-      return d>=seg.toISOString().split('T')[0]&&d<=hoje;
-    }
-    return d.startsWith(hoje.slice(0,7));
+    if(_listaTab==='dia') return d===dataFiltro;
+    if(_listaTab==='semana') return d>=segFiltro&&d<=domFiltro;
+    return d.startsWith(mesFiltro);
   }
 
-  const labelTab=_listaTab==='dia'?'Hoje':_listaTab==='semana'?'Esta Semana':'Este Mês';
+  const fmtD=(s)=>new Date(s+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  const labelTab=_listaTab==='dia'?`Dia: ${fmtD(dataFiltro)}`:
+                 _listaTab==='semana'?`Semana: ${fmtD(segFiltro)} a ${fmtD(domFiltro)}`:
+                 `Mês: ${new Date(mesFiltro+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}`;
+
+  // Conversão semanal (semana do dataFiltro)
+  const convSemEl=document.getElementById('lista-conv-semanal');
+  if(convSemEl&&can('admin','gerente')){
+    const vends=myVendedoras();
+    const atdsSem=S.atendimentos.filter(a=>vends.map(v=>v.id).includes(a.vendedoraId)&&a.created_at&&a.created_at.split('T')[0]>=segFiltro&&a.created_at.split('T')[0]<=domFiltro);
+    const convSem=atdsSem.length?(atdsSem.filter(a=>a.resultado==='comprou').length/atdsSem.length*100):0;
+    convSemEl.innerHTML=`<div class="card" style="padding:12px 16px">
+      <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Conversão Semanal (${fmtD(segFiltro)} a ${fmtD(domFiltro)})</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div><div style="font-size:11px;color:var(--gray);font-weight:600">Atendimentos</div><div style="font-size:20px;font-weight:900">${atdsSem.length}</div></div>
+        <div><div style="font-size:11px;color:var(--gray);font-weight:600">Vendas</div><div style="font-size:20px;font-weight:900;color:var(--pink)">${atdsSem.filter(a=>a.resultado==='comprou').length}</div></div>
+        <div><div style="font-size:11px;color:var(--gray);font-weight:600">Conversão</div><div style="font-size:20px;font-weight:900;color:var(--teal)">${convSem.toFixed(1)}%</div></div>
+      </div>
+    </div>`;
+  } else if(convSemEl){ convSemEl.innerHTML=''; }
 
   if(u.role==='vendedora'){
     let v=S.vendedoras.find(x=>x.id===u.vendedoraId)||S.vendedoras.find(x=>x.nome===u.nome);
@@ -1905,6 +1964,7 @@ function renderLista(){
     </div>`;
   }).join('');
 }
+
 
 function renderVendas(){
   const u=S.currentUser;
@@ -1965,9 +2025,12 @@ function renderVendas(){
 
 function renderMetas(){
   const u=S.currentUser;
-  // canEdit: admin e gerente podem editar
   const canEdit=can('admin','gerente');
   const lojas=myLojas();
+  const hoje=new Date();
+  const mesAtual=hoje.toISOString().slice(0,7);
+  const nomeMes=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const nomeMesMaiusc=nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1);
 
   // -- VENDEDORA: vê só ela mesma --
   if(u.role==='vendedora'){
@@ -2005,7 +2068,12 @@ function renderMetas(){
   }
 
   // ── ADMIN / GERENTE: por loja ──
-  document.getElementById('meta-loja-content').innerHTML=lojas.map(loja=>{
+  document.getElementById('meta-loja-content').innerHTML=
+    `<div style="background:linear-gradient(135deg,var(--pink),var(--pink-light));border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:12px;color:#fff;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;font-weight:800">📅 ${nomeMesMaiusc}</div>
+      <div style="font-size:11px;font-weight:600;opacity:.85">Metas do mês atual</div>
+    </div>`+
+    lojas.map(loja=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===loja.id);
     const fat=fatLoja(loja.id);
     const p1=loja.meta1?Math.min(fat/loja.meta1*100,100):0;
@@ -2019,7 +2087,7 @@ function renderMetas(){
           ${canEdit?`<button class="btn-sm btn-edit" onclick="editarLoja('${loja.id}')">✏️ Editar</button>`:''}
         </div>
       </div>
-      <div style="font-size:12px;font-weight:800;color:var(--teal);margin-bottom:8px">Faturamento: ${fmt(fat)}</div>
+      <div style="font-size:12px;font-weight:800;color:var(--teal);margin-bottom:8px">Faturamento ${nomeMesMaiusc}: ${fmt(fat)}</div>
       <div class="meta-3cols">
         <div class="meta-box"><div class="meta-box-label">1ª Meta</div><div class="meta-box-val">${fmt(loja.meta1)}</div><div class="meta-box-sub">${p1.toFixed(0)}% atingido</div></div>
         <div class="meta-box"><div class="meta-box-label">2ª Meta</div><div class="meta-box-val">${fmt(loja.meta2)}</div><div class="meta-box-sub">${p2.toFixed(0)}% atingido</div></div>
