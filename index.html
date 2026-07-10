@@ -330,7 +330,14 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- LISTA DA VEZ -->
   <div class="page" id="page-lista">
-    <div style="margin-bottom:12px"><button class="btn-primary" onclick="openModal('modal-atd')">+ Novo Atendimento</button></div>
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="openModal('modal-atd')">+ Novo Atendimento</button>
+      <div class="meta-tabs" style="margin:0;flex:1;min-width:200px">
+        <button class="meta-tab active" onclick="setListaTab(this,'dia')">Hoje</button>
+        <button class="meta-tab" onclick="setListaTab(this,'semana')">Semana</button>
+        <button class="meta-tab" onclick="setListaTab(this,'mes')">Mês</button>
+      </div>
+    </div>
     <div id="lista-por-loja"></div>
   </div>
 
@@ -398,6 +405,11 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
   <!-- PERFIL -->
   <div class="page" id="page-perfil">
+    <!-- Vendas do dia (admin/gerente) -->
+    <div id="perfil-vendas-dia" style="display:none;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📅 Vendas de Hoje por Vendedora</div>
+      <div id="perfil-vendas-dia-content"></div>
+    </div>
     <div class="card" style="max-width:400px">
       <div class="card-title" style="margin-bottom:14px">🔑 Minha Conta</div>
       <label class="form-label">Nova senha</label>
@@ -417,13 +429,12 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     </div>
     <div class="section-grid">
       <div class="card"><div class="card-header"><div class="card-title">Ticket Médio por Vendedora</div></div><div class="chart-wrap"><canvas id="chartTicket"></canvas></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">Média de Peças por Atendimento</div></div><div class="chart-wrap"><canvas id="chartPecas"></canvas></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Peças por Atendimento</div></div><div class="chart-wrap"><canvas id="chartPecas"></canvas></div></div>
     </div>
-    <!-- Tabela detalhada -->
     <div class="card">
       <div class="card-header"><div class="card-title">Resumo por Vendedora</div></div>
-      <div style="overflow-x:auto"><table class="tbl" id="tbl-relatorio">
-        <thead><tr><th>Vendedora</th><th>Faturamento</th><th>Vendas</th><th>Ticket Médio</th><th>Atds</th><th>Conversão</th><th>Peças/Atd</th></tr></thead>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>Vendedora</th><th>Faturamento</th><th>Nº Vendas</th><th>Total Peças</th><th>Ticket Médio</th><th>Atendimentos</th><th>Conversão</th><th>Peças/Atd</th></tr></thead>
         <tbody id="relatorio-tbody"></tbody>
       </table></div>
     </div>
@@ -566,20 +577,15 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 <!-- Feedback -->
 <div class="modal-overlay" id="modal-feedback">
   <div class="modal">
-    <div class="modal-title">Novo Feedback 💬</div>
-    <label class="form-label">Loja</label><select class="form-input" id="fb-loja"></select>
+    <div class="modal-title" id="fb-modal-title">Novo Feedback 💬</div>
+    <input type="hidden" id="fb-edit-id">
+    <label class="form-label">Loja</label><select class="form-input" id="fb-loja" onchange="filtrarVendsLoja()"></select>
     <label class="form-label">Vendedora</label><select class="form-input" id="fb-vendedora"></select>
+    <label class="form-label">Data do Feedback</label>
+    <input class="form-input" id="fb-data" type="date">
     <label class="form-label">Tipo</label>
     <select class="form-input" id="fb-tipo"><option value="positivo">⭐ Positivo</option><option value="melhoria">🔧 Ponto de melhoria</option></select>
     <label class="form-label">Observação</label><textarea class="form-input" id="fb-texto" rows="3" placeholder="Descreva o feedback..."></textarea>
-    <label class="form-label">Anexar (PNG ou PDF)</label>
-    <div style="display:flex;gap:8px;margin-top:5px">
-      <button class="btn-sm btn-edit" onclick="document.getElementById('fb-camera').click()" type="button">📷 Câmera</button>
-      <button class="btn-sm btn-edit" onclick="document.getElementById('fb-file').click()" type="button">📎 Arquivo</button>
-    </div>
-    <input type="file" id="fb-camera" accept="image/*" capture="environment" style="display:none" onchange="addFbAttach(this)">
-    <input type="file" id="fb-file" accept="image/png,image/jpeg,application/pdf" style="display:none" onchange="addFbAttach(this)">
-    <div id="fb-attach-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
     <div class="modal-actions"><button class="btn-secondary" onclick="closeModal('modal-feedback')">Cancelar</button><button class="btn-primary" onclick="salvarFeedback()">Salvar</button></div>
   </div>
 </div>
@@ -1076,25 +1082,69 @@ function initRelatorios(){
   const vends=myVendedoras();
   if(!vends.length) return;
   const nomes=vends.map(v=>nomeReal(v));
-  const cores=['rgba(255,45,142,0.8)','rgba(0,196,180,0.8)','rgba(255,214,0,0.8)','rgba(106,27,154,0.8)','rgba(255,107,181,0.8)','rgba(0,150,136,0.8)'];
+  const cores=['#FF2D8E','#00C4B4','#FFD600','#6A1B9A','#FF6BB5','#009E90','#F57F17','#E91E63'];
+
+  // Calculos corretos
   const fats=vends.map(v=>realizadoReal(v.id));
-  const convs=vends.map(v=>+(convV(v.id)*100).toFixed(1));
-  const tickets=vends.map(v=>{const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);return vendas.length?+(realizadoReal(v.id)/vendas.length).toFixed(2):0;});
-  const pecas=vends.map(v=>{const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);const tp=S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+x.pecas,0);return atds.length?+(tp/atds.length).toFixed(2):0;});
-  const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+  // Conversão = atds com compra / total atds
+  const convs=vends.map(v=>{
+    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
+    return atds.length?+(atds.filter(x=>x.resultado==='comprou').length/atds.length*100).toFixed(1):0;
+  });
+  // Ticket médio = soma vendas / qtd atendimentos
+  const tickets=vends.map(v=>{
+    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id).length;
+    const fat=realizadoReal(v.id);
+    return atds?+(fat/atds).toFixed(2):0;
+  });
+  // Peças/Atd = soma de peças / qtd atendimentos
+  const pecasAtd=vends.map(v=>{
+    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id).length;
+    const tp=S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+(x.pecas||0),0);
+    return atds?+(tp/atds).toFixed(2):0;
+  });
+  // Total peças vendidas
+  const totalPecas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+(x.pecas||0),0));
+
+  const pieOpts=(titulo)=>({
+    type:'pie',
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{family:'Nunito',size:11},boxWidth:12}},
+        title:{display:true,text:titulo,font:{family:'Nunito',size:12,weight:'bold'}}
+      }
+    }
+  });
+
   const c1=document.getElementById('chartVend2');
-  if(c1) _rCharts.push(new Chart(c1,{type:'bar',data:{labels:nomes,datasets:[{data:fats,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{ticks:{callback:v=>'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}}));
+  if(c1) _rCharts.push(new Chart(c1,{...pieOpts('Faturamento'),data:{labels:nomes,datasets:[{data:fats,backgroundColor:cores}]}}));
+
   const c2=document.getElementById('chartConv');
-  if(c2) _rCharts.push(new Chart(c2,{type:'bar',data:{labels:nomes,datasets:[{data:convs,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}}));
+  if(c2) _rCharts.push(new Chart(c2,{...pieOpts('Conversão (%)'),data:{labels:nomes.map((n,i)=>`${n} ${convs[i]}%`),datasets:[{data:convs,backgroundColor:cores}]}}));
+
   const c3=document.getElementById('chartTicket');
-  if(c3) _rCharts.push(new Chart(c3,{type:'bar',data:{labels:nomes,datasets:[{data:tickets,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{ticks:{callback:v=>'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}}));
+  if(c3) _rCharts.push(new Chart(c3,{...pieOpts('Ticket Médio'),data:{labels:nomes,datasets:[{data:tickets,backgroundColor:cores}]}}));
+
   const c4=document.getElementById('chartPecas');
-  if(c4) _rCharts.push(new Chart(c4,{type:'bar',data:{labels:nomes,datasets:[{data:pecas,backgroundColor:cores,borderRadius:8}]},options:{...baseOpts,scales:{y:{beginAtZero:true}}}}));
+  if(c4) _rCharts.push(new Chart(c4,{...pieOpts('Peças/Atendimento'),data:{labels:nomes.map((n,i)=>`${n} ${pecasAtd[i]}`),datasets:[{data:pecasAtd,backgroundColor:cores}]}}));
+
+  // Tabela resumo completa
   const tbody=document.getElementById('relatorio-tbody');
   if(tbody) tbody.innerHTML=vends.map((v,i)=>{
     const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
     const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
-    return`<tr><td>${v.emoji} ${nomeReal(v)}</td><td style="font-weight:900;color:var(--teal)">${fmt(fats[i])}</td><td>${vendas.length}</td><td>${fmt(tickets[i])}</td><td>${atds.length}</td><td><span style="font-weight:800;color:${convs[i]>=30?'var(--teal)':convs[i]>=20?'#F57F17':'var(--pink)'}">${convs[i].toFixed(1)}%</span></td><td>${pecas[i].toFixed(2)}</td></tr>`;
+    return`<tr>
+      <td>${v.emoji} ${nomeReal(v)}</td>
+      <td style="font-weight:900;color:var(--teal)">${fmt(fats[i])}</td>
+      <td>${vendas.length}</td>
+      <td style="font-weight:800;color:var(--purple)">${totalPecas[i]}</td>
+      <td>${fmt(tickets[i])}</td>
+      <td>${atds.length}</td>
+      <td><span style="font-weight:800;color:${convs[i]>=30?'var(--teal)':convs[i]>=20?'#F57F17':'var(--pink)'}">${convs[i].toFixed(1)}%</span></td>
+      <td>${pecasAtd[i].toFixed(2)}</td>
+    </tr>`;
   }).join('');
 }
 function showPage(page){
@@ -1110,7 +1160,11 @@ function toggleSidebar(){const s=document.getElementById('sidebar'),o=document.g
 function openModal(id){
   fillSelects();
   if(id==='modal-venda')document.getElementById('venda-data').value=new Date().toISOString().split('T')[0];
-  if(id==='modal-feedback'){S.fbPendingAttachments=[];document.getElementById('fb-attach-preview').innerHTML='';}
+  if(id==='modal-feedback'){
+    document.getElementById('fb-edit-id').value='';
+    document.getElementById('fb-modal-title').textContent='Novo Feedback 💬';
+    document.getElementById('fb-data').value=new Date().toISOString().split('T')[0];
+  }
   if(id==='modal-usuario'){document.getElementById('u-role').value='gerente';document.getElementById('u-loja-wrap').style.display='block';}
   if(id==='modal-cad-loja'){document.getElementById('loja-edit-id').value='';['loja-nome','loja-meta1','loja-meta2','loja-metabig'].forEach(x=>document.getElementById(x).value='');}
   if(S.currentUser?.role==='vendedora'){
@@ -1452,6 +1506,7 @@ async function salvarFeedback(){
   const vId=document.getElementById('fb-vendedora').value;
   const tipo=document.getElementById('fb-tipo').value;
   const texto=document.getElementById('fb-texto').value.trim();
+  const dataFb=document.getElementById('fb-data').value||new Date().toISOString().split('T')[0];
   if(!vId){toast('Selecione a vendedora!');return;}
   if(!texto){toast('Escreva o feedback!');return;}
   const vd=getV(vId);
@@ -1462,19 +1517,54 @@ async function salvarFeedback(){
       loja_id:lojaId,
       tipo,
       texto,
-      data_registro:new Date().toISOString().split('T')[0]
+      data_registro:dataFb
     });
     await loadAll();
     closeModal('modal-feedback');
     document.getElementById('fb-texto').value='';
-    S.fbPendingAttachments=[];
-    document.getElementById('fb-attach-preview').innerHTML='';
+    document.getElementById('fb-data').value='';
     toast('Feedback salvo! 💬');
     renderAll();
   }catch(e){
     console.error('Feedback erro:',e);
     toast('Erro ao salvar: '+e.message);
   }
+}
+
+function renderPerfil(){
+  const u=S.currentUser;
+  const hoje=new Date().toISOString().split('T')[0];
+  const perfilDia=document.getElementById('perfil-vendas-dia');
+  const perfilContent=document.getElementById('perfil-vendas-dia-content');
+  if(!perfilDia||!perfilContent) return;
+  if(!can('admin','gerente')){ perfilDia.style.display='none'; return; }
+  perfilDia.style.display='block';
+  const lojas=myLojas();
+  perfilContent.innerHTML=lojas.map(loja=>{
+    const vends=S.vendedoras.filter(v=>v.lojaId===loja.id);
+    const vendasHoje=S.vendas.filter(v=>S.vendedoras.find(x=>x.id===v.vendedoraId&&x.lojaId===loja.id)&&v.data===hoje);
+    const totalDia=vendasHoje.reduce((s,v)=>s+v.valor,0);
+    return`<div class="loja-section" style="margin-bottom:10px">
+      <div class="loja-header">
+        <div class="loja-nome">🏪 ${loja.nome}</div>
+        <div style="font-size:13px;font-weight:900;color:var(--teal)">${fmt(totalDia)}</div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Vendedora</th><th>Fat. Hoje</th><th>Vendas</th><th>Peças</th></tr></thead>
+        <tbody>${vends.map(v=>{
+          const vHoje=S.vendas.filter(x=>x.vendedoraId===v.id&&x.data===hoje);
+          const fat=vHoje.reduce((s,x)=>s+x.valor,0);
+          const pecas=vHoje.reduce((s,x)=>s+(x.pecas||0),0);
+          return`<tr>
+            <td>${v.emoji} ${nomeReal(v)}</td>
+            <td style="font-weight:900;color:${fat>0?'var(--teal)':'var(--gray)'}">${fmt(fat)}</td>
+            <td>${vHoje.length}</td>
+            <td>${pecas}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }).join('');
 }
 function openEditFeedback(id){
   const f=S.feedbacks.find(x=>x.id===id);if(!f)return;
@@ -1563,7 +1653,7 @@ function closeLightbox(){document.getElementById('lightbox').classList.remove('o
 document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
 
 // === RENDER ===
-function renderAll(){renderDashboard();renderLista();renderVendas();renderVendedoras();renderMetas();renderFeedbacks();renderEstrategias();renderUsuarios();renderLojas();renderVm();}
+function renderAll(){renderDashboard();renderLista();renderVendas();renderVendedoras();renderMetas();renderFeedbacks();renderEstrategias();renderUsuarios();renderLojas();renderVm();renderPerfil();}
 
 function renderDashboard(){
   const lojas=myLojas();
@@ -1741,62 +1831,77 @@ function _renderDashVendedora(v, hoje, mesAtual){
   </div>`;
 }
 
+let _listaTab='dia';
+function setListaTab(el,key){
+  document.querySelectorAll('#page-lista .meta-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  _listaTab=key;
+  renderLista();
+}
+
 function renderLista(){
-  const lojas=myLojas();
   const u=S.currentUser;
-  // Vendedora vê só os atendimentos dela
-  if(u.role==='vendedora'){
-    const atds=S.atendimentos.filter(a=>a.vendedoraId===u.vendedoraId);
-    const vendas=atds.filter(a=>a.resultado==='comprou').length;
-    const conv=atds.length?(vendas/atds.length*100).toFixed(1):0;
-    document.getElementById('lista-por-loja').innerHTML=`
-      <div class="loja-section">
-        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-          <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Atendimentos</div><div class="atd-stat-val">${atds.length}</div></div>
-          <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Vendas</div><div class="atd-stat-val pink">${vendas}</div></div>
-          <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Conversão</div><div class="atd-stat-val teal">${conv}%</div></div>
-        </div>
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Cliente</th><th>Resultado</th><th>Ações</th></tr></thead>
-          <tbody>${[...atds].reverse().map((a,i)=>`
-            <tr>
-              <td>${atds.length-i}</td>
-              <td>${a.cliente}</td>
-              <td><span class="badge ${a.resultado==='comprou'?'comprou':'nao'}">${a.resultado==='comprou'?'Comprou':'Não comprou'}</span></td>
-              <td style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="openEditAtd('${a.id}')">✏️</button> <button class="btn-sm btn-del" onclick="excluirAtd('${a.id}')">🗑️</button></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-    return;
+  const lojas=myLojas();
+  const hoje=new Date().toISOString().split('T')[0];
+
+  function dentroDoRange(created_at){
+    if(!created_at) return true; // sem data, inclui sempre
+    const d=created_at.split('T')[0];
+    if(_listaTab==='dia') return d===hoje;
+    if(_listaTab==='semana'){
+      const now=new Date(),dow=now.getDay();
+      const seg=new Date(now); seg.setDate(now.getDate()-(dow===0?6:dow-1));
+      return d>=seg.toISOString().split('T')[0]&&d<=hoje;
+    }
+    return d.startsWith(hoje.slice(0,7));
   }
-  // Admin/gerente vê por loja
-  const canEdit=can('admin','gerente');
-  document.getElementById('lista-por-loja').innerHTML=lojas.map(loja=>{
-    const vends=S.vendedoras.filter(v=>v.lojaId===loja.id).map(v=>v.id);
-    const atds=S.atendimentos.filter(a=>vends.includes(a.vendedoraId));
+
+  const labelTab=_listaTab==='dia'?'Hoje':_listaTab==='semana'?'Esta Semana':'Este Mês';
+
+  if(u.role==='vendedora'){
+    let v=S.vendedoras.find(x=>x.id===u.vendedoraId)||S.vendedoras.find(x=>x.nome===u.nome);
+    const atds=v?S.atendimentos.filter(a=>a.vendedoraId===v.id&&dentroDoRange(a.created_at)):[];
     const vendas=atds.filter(a=>a.resultado==='comprou').length;
     const conv=atds.length?(vendas/atds.length*100).toFixed(1):0;
-    return`<div class="loja-section" style="margin-bottom:14px">
-      <div class="loja-header"><div class="loja-nome">🏪 ${loja.nome}</div></div>
+    document.getElementById('lista-por-loja').innerHTML=`<div class="loja-section">
+      <div style="font-size:12px;font-weight:800;color:var(--pink);margin-bottom:8px">${labelTab}</div>
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Atendimentos</div><div class="atd-stat-val">${atds.length}</div></div>
         <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Vendas</div><div class="atd-stat-val pink">${vendas}</div></div>
         <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Conversão</div><div class="atd-stat-val teal">${conv}%</div></div>
       </div>
-      <table class="tbl">
-        <thead><tr><th>#</th><th>Cliente</th><th>Vendedora</th><th>Resultado</th><th>Ações</th></tr></thead>
-        <tbody>${[...atds].reverse().map((a,i)=>{
-          const vd=getV(a.vendedoraId);
-          return`<tr>
-            <td>${atds.length-i}</td>
-            <td>${a.cliente}</td>
-            <td>${vd?.emoji||''} ${vd?nomeReal(vd):'—'}</td>
-            <td><span class="badge ${a.resultado==='comprou'?'comprou':'nao'}">${a.resultado==='comprou'?'Comprou':'Não comprou'}</span></td>
-            <td style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="openEditAtd('${a.id}')">✏️</button> <button class="btn-sm btn-del" onclick="excluirAtd('${a.id}')">🗑️</button></td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table>
+      <table class="tbl"><thead><tr><th>#</th><th>Cliente</th><th>Resultado</th><th>Ações</th></tr></thead>
+      <tbody>${[...atds].reverse().map((a,i)=>`<tr>
+        <td>${atds.length-i}</td><td>${a.cliente}</td>
+        <td><span class="badge ${a.resultado==='comprou'?'comprou':'nao'}">${a.resultado==='comprou'?'Comprou':'Não comprou'}</span></td>
+        <td style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="openEditAtd('${a.id}')">✏️</button> <button class="btn-sm btn-del" onclick="excluirAtd('${a.id}')">🗑️</button></td>
+      </tr>`).join('')}</tbody></table>
+    </div>`;
+    return;
+  }
+
+  document.getElementById('lista-por-loja').innerHTML=lojas.map(loja=>{
+    const vends=S.vendedoras.filter(v=>v.lojaId===loja.id).map(v=>v.id);
+    const atds=S.atendimentos.filter(a=>vends.includes(a.vendedoraId)&&dentroDoRange(a.created_at));
+    const vendas=atds.filter(a=>a.resultado==='comprou').length;
+    const conv=atds.length?(vendas/atds.length*100).toFixed(1):0;
+    return`<div class="loja-section" style="margin-bottom:14px">
+      <div class="loja-header"><div class="loja-nome">🏪 ${loja.nome}</div><span style="font-size:11px;font-weight:700;color:var(--pink)">${labelTab}</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Atendimentos</div><div class="atd-stat-val">${atds.length}</div></div>
+        <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Vendas</div><div class="atd-stat-val pink">${vendas}</div></div>
+        <div class="atd-stat" style="flex:1;min-width:70px"><div class="atd-stat-label">Conversão</div><div class="atd-stat-val teal">${conv}%</div></div>
+      </div>
+      <table class="tbl"><thead><tr><th>#</th><th>Cliente</th><th>Vendedora</th><th>Resultado</th><th>Ações</th></tr></thead>
+      <tbody>${[...atds].reverse().map((a,i)=>{
+        const vd=getV(a.vendedoraId);
+        return`<tr>
+          <td>${atds.length-i}</td><td>${a.cliente}</td>
+          <td>${vd?.emoji||''} ${vd?nomeReal(vd):'—'}</td>
+          <td><span class="badge ${a.resultado==='comprou'?'comprou':'nao'}">${a.resultado==='comprou'?'Comprou':'Não comprou'}</span></td>
+          <td style="white-space:nowrap"><button class="btn-sm btn-edit" onclick="openEditAtd('${a.id}')">✏️</button> <button class="btn-sm btn-del" onclick="excluirAtd('${a.id}')">🗑️</button></td>
+        </tr>`;
+      }).join('')}</tbody></table>
     </div>`;
   }).join('');
 }
