@@ -900,7 +900,7 @@ const mapLoja=r=>({id:r.id,nome:r.nome,meta1:+r.meta1||0,meta2:+r.meta2||0,metab
 const mapUsuario=r=>({id:r.id,nome:r.nome,login:r.login,senha:r.senha,role:r.role,lojaId:r.loja_id,vendedoraId:r.vendedora_id});
 const mapVendedora=r=>({id:r.id,nome:r.nome,emoji:r.emoji||'👩',lojaId:r.loja_id,meta1:+r.meta1||0,meta2:+r.meta2||0,metabig:+r.metabig||0,whatsapp:r.whatsapp||''});
 const mapVenda=r=>({id:r.id,vendedoraId:r.vendedora_id,valor:+r.valor||0,pecas:+r.pecas||1,data:r.data||''});
-const mapAtd=r=>({id:r.id,vendedoraId:r.vendedora_id,cliente:r.cliente||'Cliente',resultado:r.resultado,obs:r.obs||''});
+const mapAtd=r=>({id:r.id,vendedoraId:r.vendedora_id,lojaId:r.loja_id,cliente:r.cliente||'Cliente',resultado:r.resultado,obs:r.obs||'',data:r.data||null,created_at:r.created_at||null});
 const mapFeedback=r=>({id:r.id,vendedoraId:r.vendedora_id,tipo:r.tipo,texto:r.texto,data:r.data||'',attachments:[]});
 const mapEstrategia=r=>({id:r.id,lojaId:r.loja_id,titulo:r.titulo,desc:r.descricao||'',status:r.status,cor:r.cor||'pink'});
 
