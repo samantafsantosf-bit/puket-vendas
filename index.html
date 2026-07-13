@@ -1401,6 +1401,7 @@ async function salvarAtd(){
   const obs=document.getElementById('atd-obs').value;
   if(!vId){toast('Selecione a vendedora!');return;}
   if(!S.resultado){toast('Marque se comprou ou nao!');return;}
+  const vd=getV(vId);
   try{
     await dbInsert('atendimentos',{
       vendedora_id:vId,
