@@ -973,7 +973,7 @@ function nomeReal(v){
   return u?u.nome:v.nome;
 }
 // Vendas reais de uma vendedora
-function realizadoReal(vid){return S.vendas.filter(v=>v.vendedoraId===vid).reduce((s,v)=>s+v.valor,0);}
+function realizadoReal(vid,mes){return S.vendas.filter(v=>v.vendedoraId===vid&&(!mes||!v.data||v.data.startsWith(mes))).reduce((s,v)=>s+v.valor,0);}
 // Vendedoras visíveis pelo usuário logado
 function myVendedoras(){
   const u=S.currentUser;if(!u)return[];
@@ -1011,7 +1011,7 @@ function metaVendedora(v,tipo){
 function convV(id){const a=S.atendimentos.filter(x=>x.vendedoraId===id);return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
 function convEquipe(){const ids=myVendedoras().map(v=>v.id);const a=S.atendimentos.filter(x=>ids.includes(x.vendedoraId));return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
 // Faturamento de uma loja
-function fatLoja(lojaId){return S.vendas.filter(v=>{const vd=getV(v.vendedoraId);return vd&&vd.lojaId===lojaId;}).reduce((s,v)=>s+v.valor,0);}
+function fatLoja(lojaId,mes){return S.vendas.filter(v=>{const vd=getV(v.vendedoraId);return vd&&vd.lojaId===lojaId&&(!mes||!v.data||v.data.startsWith(mes));}).reduce((s,v)=>s+v.valor,0);}
 
 // === PW TOGGLE ===
 function togglePw(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁️':'🙈';}
@@ -1810,12 +1810,12 @@ function renderDashboard(){
   document.getElementById('dash-pct1').textContent=pct1.toFixed(1)+'%';
 
   // Ranking mensal
-  const sorted=[...vends].sort((a,b)=>realizadoReal(b.id)-realizadoReal(a.id));
-  const maxR=realizadoReal(sorted[0]?.id)||1;
+  const sorted=[...vends].sort((a,b)=>realizadoReal(b.id,mesSelec)-realizadoReal(a.id,mesSelec));
+  const maxR=realizadoReal(sorted[0]?.id,mesSelec)||1;
   document.getElementById('rank-list').innerHTML=sorted.slice(0,5).map((v,i)=>`
     <div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-avatar">${v.emoji}</div>
-    <div class="rank-info"><div class="rank-name">${nomeReal(v)}</div><div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(v.id)/maxR*100).toFixed(0)}%"></div></div></div>
-    <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(v.id))}</div><div style="font-size:9px;color:var(--gray);font-weight:700">${(convV(v.id)*100).toFixed(0)}% conv.</div></div></div>`).join('');
+    <div class="rank-info"><div class="rank-name">${nomeReal(v)}</div><div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(v.id,mesSelec)/maxR*100).toFixed(0)}%"></div></div></div>
+    <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(v.id,mesSelec))}</div><div style="font-size:9px;color:var(--gray);font-weight:700">${(convV(v.id)*100).toFixed(0)}% conv.</div></div></div>`).join('');
 
   // Últimas vendas
   document.getElementById('ultimas-vendas').innerHTML=[...vendasMes].reverse().slice(0,5).map(v=>{
@@ -2118,7 +2118,7 @@ function renderMetas(){
     </div>`+
     lojas.map(loja=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===loja.id);
-    const fat=fatLoja(loja.id);
+    const mesHoje=new Date().toISOString().slice(0,7);const fat=fatLoja(loja.id,mesHoje);
     const p1=loja.meta1?Math.min(fat/loja.meta1*100,100):0;
     const p2=loja.meta2?Math.min(fat/loja.meta2*100,100):0;
     const pb=loja.metabig?Math.min(fat/loja.metabig*100,100):0;
