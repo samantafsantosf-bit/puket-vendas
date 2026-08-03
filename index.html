@@ -374,6 +374,11 @@ window.closeModal=_closeModal; if(typeof _closeModal==='function') _closeModal(i
 
   <!-- METAS -->
   <div class="page" id="page-metas">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:var(--radius);padding:10px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <button onclick="mudarMesDash(-1);renderAll()" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">‹</button>
+      <div style="font-size:15px;font-weight:900;color:var(--dark);flex:1;text-align:center" id="metas-mes-titulo">—</div>
+      <button onclick="mudarMesDash(1);renderAll()" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">›</button>
+    </div>
     <div class="meta-tabs">
       <button class="meta-tab active" onclick="setMetaTab(this,'loja')">Por Loja</button>
       <button class="meta-tab" onclick="setMetaTab(this,'individual')">Individual</button>
@@ -384,6 +389,11 @@ window.closeModal=_closeModal; if(typeof _closeModal==='function') _closeModal(i
 
   <!-- VENDEDORAS -->
   <div class="page" id="page-vendedores">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:var(--radius);padding:10px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <button onclick="mudarMesDash(-1);renderAll()" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">‹</button>
+      <div style="font-size:15px;font-weight:900;color:var(--dark);flex:1;text-align:center" id="vends-mes-titulo">—</div>
+      <button onclick="mudarMesDash(1);renderAll()" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">›</button>
+    </div>
     <div id="btn-cad-v" style="margin-bottom:12px;display:none"><button class="btn-primary" onclick="openModal('modal-cad-vendedora')">+ Cadastrar Vendedora</button></div>
     <div class="v-grid" id="v-grid"></div>
   </div>
@@ -453,7 +463,11 @@ window.closeModal=_closeModal; if(typeof _closeModal==='function') _closeModal(i
 
   <!-- RELATÓRIOS -->
   <div class="page" id="page-relatorios">
-    <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📊 Relatórios do Mês</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:var(--radius);padding:10px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <button onclick="mudarMesDash(-1);renderAll();setTimeout(initRelatorios,150)" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">‹</button>
+      <div style="font-size:15px;font-weight:900;color:var(--dark);flex:1;text-align:center" id="rel-mes-titulo">—</div>
+      <button onclick="mudarMesDash(1);renderAll();setTimeout(initRelatorios,150)" style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);border:none;color:var(--pink);font-size:18px;cursor:pointer;font-weight:900">›</button>
+    </div>
     <div class="section-grid">
       <div class="card"><div class="card-header"><div class="card-title">Faturamento por Vendedora</div></div><div class="chart-wrap"><canvas id="chartVend2"></canvas></div></div>
       <div class="card"><div class="card-header"><div class="card-title">Conversão por Vendedora</div></div><div class="chart-wrap"><canvas id="chartConv"></canvas></div></div>
@@ -481,6 +495,19 @@ window.closeModal=_closeModal; if(typeof _closeModal==='function') _closeModal(i
 <div id="lightbox"><button id="lightbox-close" onclick="closeLightbox()">✕</button><img id="lightbox-img" src="" alt=""></div>
 
 <!-- === MODALS === -->
+<!-- Meta do Mês -->
+<div class="modal-overlay" id="modal-meta-mes">
+  <div class="modal">
+    <div class="modal-title" id="meta-mes-titulo">Meta do Mês 🎯</div>
+    <input type="hidden" id="mm-loja-id">
+    <input type="hidden" id="mm-mes">
+    <label class="form-label">1ª Meta (R$)</label><input class="form-input" id="mm-meta1" type="number" placeholder="Ex: 80000">
+    <label class="form-label">2ª Meta (R$)</label><input class="form-input" id="mm-meta2" type="number" placeholder="Ex: 100000">
+    <label class="form-label">BIG Meta (R$)</label><input class="form-input" id="mm-metabig" type="number" placeholder="Ex: 130000">
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal('modal-meta-mes')">Cancelar</button><button class="btn-primary" onclick="salvarMetaMes()">Salvar</button></div>
+  </div>
+</div>
+
 <!-- Confirm -->
 <div class="modal-overlay" id="modal-confirm" style="align-items:center;justify-content:center">
   <div class="modal" style="border-radius:20px;max-width:320px;padding:24px;text-align:center">
@@ -851,7 +878,7 @@ let S={
   currentUser:null,
   dashLojaId:null,
   vmPhotos:[], fbPendingAttachments:[], resultado:null, resultadoEdit:null,
-  lojas:[], usuarios:[], vendedoras:[], atendimentos:[], vendas:[], feedbacks:[], estrategias:[],
+  lojas:[], usuarios:[], vendedoras:[], atendimentos:[], vendas:[], feedbacks:[], estrategias:[], metas_mes:[],
 };
 
 // === SUPABASE — carregar todos os dados ===
@@ -867,7 +894,7 @@ async function sbFetch(tabela, order){
 async function loadAll(){
   showLoading(true);
   try{
-    const [lojas,usuarios,vendedoras,vendas,atendimentos,feedbacks,estrategias]=await Promise.all([
+    const [lojas,usuarios,vendedoras,vendas,atendimentos,feedbacks,estrategias,metas_mes_data]=await Promise.all([
       sbFetch('lojas','created_at.asc'),
       sbFetch('usuarios','created_at.asc'),
       sbFetch('vendedoras','created_at.asc'),
@@ -875,6 +902,7 @@ async function loadAll(){
       sbFetch('atendimentos','created_at.desc'),
       sbFetch('feedbacks','created_at.desc'),
       sbFetch('estrategias','created_at.desc'),
+      sbFetch('metas_mes','created_at.desc'),
     ]);
     S.lojas=lojas.map(mapLoja);
     S.usuarios=usuarios.map(mapUsuario);
@@ -883,6 +911,7 @@ async function loadAll(){
     S.atendimentos=atendimentos.map(mapAtd);
     S.feedbacks=feedbacks.map(mapFeedback);
     S.estrategias=estrategias.map(mapEstrategia);
+    S.metas_mes=(metas_mes_data||[]).map(r=>({id:r.id,lojaId:r.loja_id,mes:r.mes,meta1:+r.meta1||0,meta2:+r.meta2||0,metabig:+r.metabig||0}));
     console.log('✅ Dados: usuários='+S.usuarios.length+' lojas='+S.lojas.length);
   }catch(e){
     console.error('loadAll erro:',e.message);
@@ -1001,6 +1030,10 @@ function myLojas(){
   return[];
 }
 // Meta individual calculada (se meta1=0, divide da loja)
+function getMetaMes(lojaId, mes){
+  return S.metas_mes.find(m=>m.lojaId===lojaId&&m.mes===mes)||null;
+}
+
 function metaVendedora(v,tipo){
   if(v[tipo]>0)return v[tipo];
   const loja=getLoja(v.lojaId);if(!loja)return 0;
@@ -1119,7 +1152,11 @@ function initRelatorios(){
   const nomes=vends.map(v=>nomeReal(v));
   const cores=['#FF2D8E','#00C4B4','#FFD600','#6A1B9A','#FF6BB5','#009E90','#F57F17','#E91E63'];
 
-  const mesPadR=_dashMes||new Date().toISOString().slice(0,7);const fats=vends.map(v=>realizadoReal(v.id,mesPadR));
+  const mesPadR=_dashMes||new Date().toISOString().slice(0,7);
+  const nomeMesR=new Date(mesPadR+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const elRel=document.getElementById('rel-mes-titulo');
+  if(elRel) elRel.textContent=nomeMesR.charAt(0).toUpperCase()+nomeMesR.slice(1);
+  const fats=vends.map(v=>realizadoReal(v.id,mesPadR));
 
   // Conversão = compras / total atds
   const convs=vends.map(v=>{
@@ -1130,7 +1167,7 @@ function initRelatorios(){
   // Ticket médio = valor total vendido / nº de VENDAS (não atendimentos)
   const tickets=vends.map(v=>{
     const vendas=S.vendas.filter(x=>x.vendedoraId===v.id&&(!x.data||x.data.startsWith(mesPadR)));
-    return vendas.length?+(realizadoReal(v.id)/vendas.length).toFixed(2):0;
+    return vendas.length?+(realizadoReal(v.id,mesPadR)/vendas.length).toFixed(2):0;
   });
 
   // P.A = total de peças / nº de VENDAS (não atendimentos)
@@ -1228,6 +1265,35 @@ function fillSelects(){
 }
 function setRes(r){S.resultado=r;document.getElementById('btn-comprou').classList.toggle('sel',r==='comprou');document.getElementById('btn-nao').classList.toggle('sel',r==='nao');}
 function onRoleChange(){const r=document.getElementById('u-role').value;document.getElementById('u-loja-wrap').style.display=r==='admin'?'none':'block';}
+
+// === METAS DO MÊS ===
+function abrirMetaMes(lojaId, mes){
+  const loja=getLoja(lojaId);
+  const mm=getMetaMes(lojaId,mes);
+  const nomeMes=new Date(mes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('mm-loja-id').value=lojaId;
+  document.getElementById('mm-mes').value=mes;
+  document.getElementById('meta-mes-titulo').textContent=`🎯 Meta de ${nomeMes} — ${loja?.nome||''}`;
+  document.getElementById('mm-meta1').value=mm?mm.meta1:(loja?.meta1||'');
+  document.getElementById('mm-meta2').value=mm?mm.meta2:(loja?.meta2||'');
+  document.getElementById('mm-metabig').value=mm?mm.metabig:(loja?.metabig||'');
+  document.getElementById('modal-meta-mes').classList.add('open');
+}
+
+async function salvarMetaMes(){
+  const lojaId=document.getElementById('mm-loja-id').value;
+  const mes=document.getElementById('mm-mes').value;
+  const meta1=parseFloat(document.getElementById('mm-meta1').value)||0;
+  const meta2=parseFloat(document.getElementById('mm-meta2').value)||0;
+  const metabig=parseFloat(document.getElementById('mm-metabig').value)||0;
+  if(!lojaId||!mes){toast('Erro: loja ou mês inválido');return;}
+  try{
+    const mm=getMetaMes(lojaId,mes);
+    if(mm){await dbUpdate('metas_mes',mm.id,{meta1,meta2,metabig});}
+    else{await dbInsert('metas_mes',{loja_id:lojaId,mes,meta1,meta2,metabig});}
+    await loadAll();closeModal('modal-meta-mes');toast('Meta salva! 🎯');renderAll();
+  }catch(e){toast('Erro: '+e.message);}
+}
 
 // === LOJAS ===
 async function salvarLoja(){
@@ -1831,8 +1897,9 @@ function renderDashboard(){
 
   // Conversão mensal
   document.getElementById('conv-vendedoras').innerHTML=vends.map(v=>{
-    const c=convV(v.id)*100;
-    const a=S.atendimentos.filter(x=>x.vendedoraId===v.id);
+    const aMes=S.atendimentos.filter(x=>x.vendedoraId===v.id&&((x.data||x.created_at||'').startsWith(mesSelec)));
+    const c=aMes.length?(aMes.filter(x=>x.resultado==='comprou').length/aMes.length*100):0;
+    const a=aMes;
     return`<div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:11px;font-weight:800">${v.emoji} ${nomeReal(v)}</span><span style="font-size:11px;font-weight:900;color:var(--pink)">${c.toFixed(0)}%</span></div>
       <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:3px">${a.filter(x=>x.resultado==='comprou').length} vendas / ${a.length} atds</div>
@@ -1883,14 +1950,14 @@ function _renderDashVendedora(v, hoje, mesSelec){
   document.getElementById('dash-pct1').textContent=pct.toFixed(1)+'%';
 
   const lojaColegas=S.vendedoras.filter(x=>x.lojaId===v.lojaId);
-  const sorted=[...lojaColegas].sort((a,b)=>realizadoReal(b.id)-realizadoReal(a.id));
-  const maxR=realizadoReal(sorted[0]?.id)||1;
+  const mesPadVC=_dashMes||new Date().toISOString().slice(0,7);const sorted=[...lojaColegas].sort((a,b)=>realizadoReal(b.id,mesPadVC)-realizadoReal(a.id,mesPadVC));
+  const maxR=realizadoReal(sorted[0]?.id,mesPadVC)||1;
   document.getElementById('rank-list').innerHTML=sorted.map((sv,i)=>`
     <div class="rank-item" style="${sv.id===v.id?'background:var(--pink-pale);border-radius:10px;':''}">
       <div class="rank-num">${i+1}</div><div class="rank-avatar">${sv.emoji}</div>
       <div class="rank-info"><div class="rank-name">${nomeReal(sv)}${sv.id===v.id?' 👈':''}</div>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(sv.id)/maxR*100).toFixed(0)}%"></div></div></div>
-      <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(sv.id))}</div></div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(sv.id,mesPadVC)/maxR*100).toFixed(0)}%"></div></div></div>
+      <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(sv.id,mesPadVC))}</div></div>
     </div>`).join('');
   document.getElementById('ultimas-vendas').innerHTML=[...minhasVendas].reverse().slice(0,4).map(x=>`
     <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--gray-light)">
@@ -2073,10 +2140,12 @@ function renderMetas(){
   const u=S.currentUser;
   const canEdit=can('admin','gerente');
   const lojas=myLojas();
-  const hoje=new Date();
-  const mesAtual=hoje.toISOString().slice(0,7);
-  const nomeMes=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const mes=_dashMes||new Date().toISOString().slice(0,7);
+  const mesAtual=new Date().toISOString().slice(0,7);
+  const nomeMes=new Date(mes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   const nomeMesMaiusc=nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1);
+  const elMetas=document.getElementById('metas-mes-titulo');
+  if(elMetas) elMetas.textContent=nomeMesMaiusc;
 
   // -- VENDEDORA: vê só ela mesma --
   if(u.role==='vendedora'){
@@ -2089,7 +2158,7 @@ function renderMetas(){
       document.getElementById('meta-ind-content').innerHTML='';
       return;
     }
-    const real=realizadoReal(v.id);
+    const mesPadMV=_dashMes||new Date().toISOString().slice(0,7);const real=realizadoReal(v.id,mesPadMV);
     const m1=metaVendedora(v,'meta1');const m2=metaVendedora(v,'meta2');const mb=metaVendedora(v,'metabig');
     const p1=m1?Math.min(real/m1*100,100):0;const p2=m2?Math.min(real/m2*100,100):0;const pb=mb?Math.min(real/mb*100,100):0;
     const loja=getLoja(v.lojaId);
@@ -2121,23 +2190,28 @@ function renderMetas(){
     </div>`+
     lojas.map(loja=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===loja.id);
-    const mesHoje=new Date().toISOString().slice(0,7);const fat=fatLoja(loja.id,mesHoje);
-    const p1=loja.meta1?Math.min(fat/loja.meta1*100,100):0;
-    const p2=loja.meta2?Math.min(fat/loja.meta2*100,100):0;
-    const pb=loja.metabig?Math.min(fat/loja.metabig*100,100):0;
+    const fat=fatLoja(loja.id,mes);
+    const mm=getMetaMes(loja.id,mes);
+    const m1=mm?mm.meta1:loja.meta1;
+    const m2=mm?mm.meta2:loja.meta2;
+    const mb=mm?mm.metabig:loja.metabig;
+    const p1=m1?Math.min(fat/m1*100,100):0;
+    const p2=m2?Math.min(fat/m2*100,100):0;
+    const pb=mb?Math.min(fat/mb*100,100):0;
     return`<div class="loja-section">
       <div class="loja-header">
         <div class="loja-nome">🏪 ${loja.nome}</div>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="loja-badge">${vends.length} vendedora(s)</span>
-          ${canEdit?`<button class="btn-sm btn-edit" onclick="editarLoja('${loja.id}')">✏️ Editar</button>`:''}
+          ${canEdit?`<button class="btn-sm btn-edit" onclick="abrirMetaMes('${loja.id}','${mes}')">🎯 Meta de ${nomeMesMaiusc}</button>`:''}
         </div>
       </div>
       <div style="font-size:12px;font-weight:800;color:var(--teal);margin-bottom:8px">Faturamento ${nomeMesMaiusc}: ${fmt(fat)}</div>
+      ${!mm&&canEdit?`<div style="background:#FFF0F7;border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:700;color:var(--pink);margin-bottom:8px">⚠️ Clique em "Meta de ${nomeMesMaiusc}" para definir as metas deste mês!</div>`:''}
       <div class="meta-3cols">
-        <div class="meta-box"><div class="meta-box-label">1ª Meta</div><div class="meta-box-val">${fmt(loja.meta1)}</div><div class="meta-box-sub">${p1.toFixed(0)}% atingido</div></div>
-        <div class="meta-box"><div class="meta-box-label">2ª Meta</div><div class="meta-box-val">${fmt(loja.meta2)}</div><div class="meta-box-sub">${p2.toFixed(0)}% atingido</div></div>
-        <div class="meta-box" style="background:var(--pink-pale)"><div class="meta-box-label" style="color:var(--pink)">BIG Meta</div><div class="meta-box-val">${fmt(loja.metabig)}</div><div class="meta-box-sub">${pb.toFixed(0)}% atingido</div></div>
+        <div class="meta-box"><div class="meta-box-label">1ª Meta</div><div class="meta-box-val">${fmt(m1)}</div><div class="meta-box-sub">${p1.toFixed(0)}% atingido</div></div>
+        <div class="meta-box"><div class="meta-box-label">2ª Meta</div><div class="meta-box-val">${fmt(m2)}</div><div class="meta-box-sub">${p2.toFixed(0)}% atingido</div></div>
+        <div class="meta-box" style="background:var(--pink-pale)"><div class="meta-box-label" style="color:var(--pink)">BIG Meta</div><div class="meta-box-val">${fmt(mb)}</div><div class="meta-box-sub">${pb.toFixed(0)}% atingido</div></div>
       </div>
       <div class="meta-bar-wrap"><div class="meta-bar-label"><span>1ª Meta</span><span>${p1.toFixed(1)}%</span></div><div class="meta-bar-track"><div class="meta-bar-fill fill-1" style="width:${p1}%"></div></div></div>
       <div class="meta-bar-wrap"><div class="meta-bar-label"><span>2ª Meta</span><span>${p2.toFixed(1)}%</span></div><div class="meta-bar-track"><div class="meta-bar-fill fill-2" style="width:${p2}%"></div></div></div>
@@ -2175,6 +2249,8 @@ function renderMetas(){
 function renderVendedoras(){
   const mes=_dashMes||new Date().toISOString().slice(0,7);
   const nomeMesV=new Date(mes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const elVends=document.getElementById('vends-mes-titulo');
+  if(elVends) elVends.textContent=nomeMesV.charAt(0).toUpperCase()+nomeMesV.slice(1);
   document.getElementById('v-grid').innerHTML=myVendedoras().map(v=>{
     const real=realizadoReal(v.id,mes);const m1=metaVendedora(v,'meta1');
     const pct=m1?Math.min(real/m1*100,100):0;const c=convV(v.id,mes)*100;
@@ -2275,7 +2351,7 @@ function renderLojas(){
   const lojas=myLojas();
   el.innerHTML=lojas.map(l=>{
     const vends=S.vendedoras.filter(v=>v.lojaId===l.id);
-    const fat=fatLoja(l.id);
+    const fat=fatLoja(l.id,_dashMes||new Date().toISOString().slice(0,7));
     return`<div class="loja-section">
       <div class="loja-header">
         <div class="loja-nome">🏪 ${l.nome}</div>
