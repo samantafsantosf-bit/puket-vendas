@@ -1008,7 +1008,10 @@ function metaVendedora(v,tipo){
   return Math.round(loja[tipo]/qtd);
 }
 // Conversão
-function convV(id,mes){const a=S.atendimentos.filter(x=>x.vendedoraId===id&&(!mes||!x.data&&!(x.created_at||"").startsWith(mes)||(x.data||"").startsWith(mes)||(x.created_at||"").startsWith(mes)));return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
+function convV(id,mes){
+  const a=S.atendimentos.filter(x=>x.vendedoraId===id&&(!mes||(x.data||x.created_at||'').startsWith(mes)));
+  return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;
+}
 function convEquipe(){const ids=myVendedoras().map(v=>v.id);const a=S.atendimentos.filter(x=>ids.includes(x.vendedoraId));return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
 // Faturamento de uma loja
 function fatLoja(lojaId,mes){return S.vendas.filter(v=>{const vd=getV(v.vendedoraId);return vd&&vd.lojaId===lojaId&&(!mes||!v.data||v.data.startsWith(mes));}).reduce((s,v)=>s+v.valor,0);}
@@ -2170,14 +2173,17 @@ function renderMetas(){
 }
 
 function renderVendedoras(){
+  const mes=_dashMes||new Date().toISOString().slice(0,7);
+  const nomeMesV=new Date(mes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   document.getElementById('v-grid').innerHTML=myVendedoras().map(v=>{
-    const real=realizadoReal(v.id);const m1=metaVendedora(v,'meta1');
-    const pct=m1?Math.min(real/m1*100,100):0;const c=convV(v.id)*100;
+    const real=realizadoReal(v.id,mes);const m1=metaVendedora(v,'meta1');
+    const pct=m1?Math.min(real/m1*100,100):0;const c=convV(v.id,mes)*100;
     const canEdit=can('admin','gerente');const loja=getLoja(v.lojaId);
     return`<div class="v-card">
       <div class="v-avatar">${v.emoji}</div>
       <div class="v-name">${nomeReal(v)}</div>
       <div class="v-loja">📍 ${loja?loja.nome:'—'}</div>
+      <div style="font-size:9px;font-weight:700;color:var(--pink);margin-top:-2px">${nomeMesV}</div>
       <div class="v-conv">${c.toFixed(0)}%</div>
       <div class="v-conv-label">Conversão</div>
       <div class="v-meta-bar">
