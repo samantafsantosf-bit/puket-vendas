@@ -1008,7 +1008,7 @@ function metaVendedora(v,tipo){
   return Math.round(loja[tipo]/qtd);
 }
 // Conversão
-function convV(id){const a=S.atendimentos.filter(x=>x.vendedoraId===id);return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
+function convV(id,mes){const a=S.atendimentos.filter(x=>x.vendedoraId===id&&(!mes||!x.data&&!(x.created_at||"").startsWith(mes)||(x.data||"").startsWith(mes)||(x.created_at||"").startsWith(mes)));return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
 function convEquipe(){const ids=myVendedoras().map(v=>v.id);const a=S.atendimentos.filter(x=>ids.includes(x.vendedoraId));return a.length?a.filter(x=>x.resultado==='comprou').length/a.length:0;}
 // Faturamento de uma loja
 function fatLoja(lojaId,mes){return S.vendas.filter(v=>{const vd=getV(v.vendedoraId);return vd&&vd.lojaId===lojaId&&(!mes||!v.data||v.data.startsWith(mes));}).reduce((s,v)=>s+v.valor,0);}
@@ -1116,29 +1116,29 @@ function initRelatorios(){
   const nomes=vends.map(v=>nomeReal(v));
   const cores=['#FF2D8E','#00C4B4','#FFD600','#6A1B9A','#FF6BB5','#009E90','#F57F17','#E91E63'];
 
-  const fats=vends.map(v=>realizadoReal(v.id));
+  const mesPadR=_dashMes||new Date().toISOString().slice(0,7);const fats=vends.map(v=>realizadoReal(v.id,mesPadR));
 
   // Conversão = compras / total atds
   const convs=vends.map(v=>{
-    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id);
+    const atds=S.atendimentos.filter(x=>x.vendedoraId===v.id&&((x.data||x.created_at||"").startsWith(mesPadR)));
     return atds.length?+(atds.filter(x=>x.resultado==='comprou').length/atds.length*100).toFixed(1):0;
   });
 
   // Ticket médio = valor total vendido / nº de VENDAS (não atendimentos)
   const tickets=vends.map(v=>{
-    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id&&(!x.data||x.data.startsWith(mesPadR)));
     return vendas.length?+(realizadoReal(v.id)/vendas.length).toFixed(2):0;
   });
 
   // P.A = total de peças / nº de VENDAS (não atendimentos)
   const pecasAtd=vends.map(v=>{
-    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id);
+    const vendas=S.vendas.filter(x=>x.vendedoraId===v.id&&(!x.data||x.data.startsWith(mesPadR)));
     const tp=vendas.reduce((s,x)=>s+(x.pecas||0),0);
     return vendas.length?+(tp/vendas.length).toFixed(2):0;
   });
 
-  const totalPecas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id).reduce((s,x)=>s+(x.pecas||0),0));
-  const nVendas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id).length);
+  const totalPecas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id&&(!x.data||x.data.startsWith(mesPadR))).reduce((s,x)=>s+(x.pecas||0),0));
+  const nVendas=vends.map(v=>S.vendas.filter(x=>x.vendedoraId===v.id&&(!x.data||x.data.startsWith(mesPadR))).length);
 
   const pieOpts=(titulo)=>({
     type:'pie',
@@ -1815,7 +1815,7 @@ function renderDashboard(){
   document.getElementById('rank-list').innerHTML=sorted.slice(0,5).map((v,i)=>`
     <div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-avatar">${v.emoji}</div>
     <div class="rank-info"><div class="rank-name">${nomeReal(v)}</div><div class="rank-bar-wrap"><div class="rank-bar" style="width:${(realizadoReal(v.id,mesSelec)/maxR*100).toFixed(0)}%"></div></div></div>
-    <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(v.id,mesSelec))}</div><div style="font-size:9px;color:var(--gray);font-weight:700">${(convV(v.id)*100).toFixed(0)}% conv.</div></div></div>`).join('');
+    <div style="text-align:right"><div style="font-size:11px;font-weight:800">${fmt(realizadoReal(v.id,mesSelec))}</div><div style="font-size:9px;color:var(--gray);font-weight:700">${(convV(v.id,mesSelec)*100).toFixed(0)}% conv.</div></div></div>`).join('');
 
   // Últimas vendas
   document.getElementById('ultimas-vendas').innerHTML=[...vendasMes].reverse().slice(0,5).map(v=>{
@@ -1848,7 +1848,7 @@ function _renderDashVendedora(v, hoje, mesSelec){
   const real=minhasVendas.reduce((s,x)=>s+x.valor,0);
   const m1=metaVendedora(v,'meta1');
   const pct=m1?Math.min(real/m1*100,100):0;
-  const atds=S.atendimentos.filter(a=>a.vendedoraId===v.id);
+  const mesPadV=_dashMes||new Date().toISOString().slice(0,7);const atds=S.atendimentos.filter(a=>a.vendedoraId===v.id&&((a.data||a.created_at||"").startsWith(mesPadV)));
   const conv=atds.length?(atds.filter(a=>a.resultado==='comprou').length/atds.length*100):0;
   const ticket=minhasVendas.length?real/minhasVendas.length:0;
 
@@ -2147,7 +2147,7 @@ function renderMetas(){
     if(!vends.length)return'';
     return`<div style="margin-bottom:6px;font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px">🏪 ${loja.nome}</div>`+
     vends.map(v=>{
-      const real=realizadoReal(v.id);
+      const mesPad2=_dashMes||new Date().toISOString().slice(0,7);const real=realizadoReal(v.id,mesPad2);
       const m1=metaVendedora(v,'meta1');const m2=metaVendedora(v,'meta2');const mb=metaVendedora(v,'metabig');
       const p1=m1?Math.min(real/m1*100,100):0;const p2=m2?Math.min(real/m2*100,100):0;const pb=mb?Math.min(real/mb*100,100):0;
       return`<div class="loja-section" style="margin-bottom:10px">
